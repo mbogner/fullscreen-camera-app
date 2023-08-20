@@ -8,21 +8,22 @@ import android.util.Log
 import android.view.Surface
 import java.io.IOException
 
-class VideoEncoder : AutoCloseable {
+@Suppress("MemberVisibilityCanBePrivate")
+class VideoEncoder(
+    val width: Int = DEFAULT_WIDTH,
+    val height: Int = DEFAULT_HEIGHT,
+    val bitRate: Int = DEFAULT_BITRATE,
+    val frameRate: Int = DEFAULT_FRAME_RATE,
+    val iFrameInterval: Int = DEFAULT_I_FRAME_INTERVAL,
+    val codecName: String = chooseHardwareCodecName()
+) : AutoCloseable {
 
     private var mediaCodec: MediaCodec? = null
     private var inputSurface: Surface? = null
     private var started = false
 
     @Synchronized
-    fun prepareEncoder(
-        width: Int = DEFAULT_WIDTH,
-        height: Int = DEFAULT_HEIGHT,
-        bitRate: Int = DEFAULT_BITRATE,
-        frameRate: Int = DEFAULT_FRAME_RATE,
-        iFrameInterval: Int = DEFAULT_I_FRAME_INTERVAL,
-        codecName: String = chooseHardwareCodecName()
-    ) {
+    fun prepareEncoder() {
         if (!started) {
             Log.i(TAG, "using codec: $codecName")
             val format =
@@ -67,15 +68,6 @@ class VideoEncoder : AutoCloseable {
         if (!started) throw IllegalStateException("not started - use prepareEncoder method")
     }
 
-    private fun chooseHardwareCodecName(codecName: String = "avc"): String {
-        val encoderInfoList = MediaCodecList(MediaCodecList.REGULAR_CODECS).codecInfos
-            .filter { it.isEncoder && it.isHardwareAccelerated }
-        encoderInfoList.forEach { Log.d(TAG, "supported codec: ${it.name}") }
-        val name = codecName.lowercase()
-        return encoderInfoList.firstOrNull { it.name.endsWith(name) }?.name
-            ?: throw IllegalStateException("$name not supported")
-    }
-
     companion object {
         private const val TAG = "VideoEncoder"
         const val DEFAULT_WIDTH = 1920
@@ -84,6 +76,15 @@ class VideoEncoder : AutoCloseable {
         const val DEFAULT_FRAME_RATE = 30
         const val DEFAULT_I_FRAME_INTERVAL = 1
         const val TIMEOUT_US = 10000L
+
+        fun chooseHardwareCodecName(codecName: String = "avc"): String {
+            val encoderInfoList = MediaCodecList(MediaCodecList.REGULAR_CODECS).codecInfos
+                .filter { it.isEncoder && it.isHardwareAccelerated }
+            encoderInfoList.forEach { Log.d(TAG, "supported codec: ${it.name}") }
+            val name = codecName.lowercase()
+            return encoderInfoList.firstOrNull { it.name.endsWith(name) }?.name
+                ?: throw IllegalStateException("$name not supported")
+        }
     }
 
 }

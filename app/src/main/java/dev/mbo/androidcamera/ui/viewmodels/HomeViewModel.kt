@@ -23,7 +23,7 @@ import kotlinx.coroutines.launch
 import java.net.ServerSocket
 import java.net.Socket
 import java.net.SocketException
-
+import java.util.concurrent.Executors
 
 class HomeViewModel : ViewModel() {
     private var encoder: VideoEncoder? = null
@@ -43,32 +43,43 @@ class HomeViewModel : ViewModel() {
 
                 cameraSize = CameraSizeUtil.getMaxSize(context)!!
 
-                val preview = Preview.Builder()
+                val previews = mutableListOf<Preview>()
+
+                previews.add(Preview.Builder()
                     .setTargetResolution(cameraSize!!)
                     .build()
                     .also {
-                        if (streaming) {
+                        it.setSurfaceProvider(previewView.surfaceProvider)
+                    })
+
+
+                if (streaming) {
+                    previews.add(Preview.Builder()
+                        .setTargetResolution(
+                            Size(
+                                VideoEncoder.DEFAULT_WIDTH,
+                                VideoEncoder.DEFAULT_HEIGHT
+                            )
+                        )
+                        .build().also {
                             encoder = VideoEncoder()
                             encoder!!.prepareEncoder()
                             it.setSurfaceProvider { request ->
                                 request.provideSurface(
                                     encoder!!.getSurface(),
                                     ContextCompat.getMainExecutor(context)
-                                ) {
-                                    // do nothing
-                                }
+                                ) {}
                             }
-                        } else {
-                            it.setSurfaceProvider(previewView.surfaceProvider)
                         }
-                    }
+                    )
+                }
 
                 try {
                     cameraProvider.unbindAll()
                     cameraProvider.bindToLifecycle(
                         context as LifecycleOwner,
                         cameraSelector,
-                        preview
+                        *previews.toTypedArray()
                     )
                 } catch (exc: Exception) {
                     Log.e(TAG, "Use case binding failed", exc)
