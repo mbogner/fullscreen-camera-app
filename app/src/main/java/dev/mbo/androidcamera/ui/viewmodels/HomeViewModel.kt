@@ -38,6 +38,9 @@ class HomeViewModel : ViewModel() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
         cameraProviderFuture.addListener(
             {
+                encoder = VideoEncoder()
+                encoder!!.prepareEncoder()
+
                 val cameraProvider = cameraProviderFuture.get()
                 val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
@@ -62,8 +65,6 @@ class HomeViewModel : ViewModel() {
                             )
                         )
                         .build().also {
-                            encoder = VideoEncoder()
-                            encoder!!.prepareEncoder()
                             it.setSurfaceProvider { request ->
                                 request.provideSurface(
                                     encoder!!.getSurface(),
