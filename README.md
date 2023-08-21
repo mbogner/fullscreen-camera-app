@@ -18,3 +18,7 @@ If you only have one device connected you can skip that `-s` parameter completel
 
 Make sure to have debugging enabled on your phone. For a tutorial how to do so, please lookup a
 tutorial in the internet for your specific phone.
+
+## Play Store
+
+https://play.google.com/store/apps/details?id=dev.mbo.androidcamera
