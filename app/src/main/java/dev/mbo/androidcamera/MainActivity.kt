@@ -1,14 +1,16 @@
 package dev.mbo.androidcamera
 
+import android.os.Build
 import android.os.Bundle
+import android.view.View
+import android.view.WindowInsets
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
 import dev.mbo.androidcamera.ui.screens.HomeScreen
-import dev.mbo.androidcamera.ui.theme.AndroidCameraTheme
 import dev.mbo.androidcamera.utils.PermissionUtil
 
 class MainActivity : ComponentActivity() {
@@ -23,14 +25,7 @@ class MainActivity : ComponentActivity() {
         )
 
         setContent {
-            AndroidCameraTheme {
-                val navController = rememberNavController()
-                NavHost(navController, startDestination = "home") {
-                    composable("home") {
-                        HomeScreen(viewModel = viewModel())
-                    }
-                }
-            }
+            HomeScreen(viewModel = viewModel())
         }
     }
 

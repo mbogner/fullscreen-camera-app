@@ -13,5 +13,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Android Camera"
+rootProject.name = "Fullscreen Camera"
 include(":app")
