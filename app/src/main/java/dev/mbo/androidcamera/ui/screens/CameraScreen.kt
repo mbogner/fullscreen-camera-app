@@ -10,11 +10,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
-import dev.mbo.androidcamera.ui.viewmodels.HomeViewModel
+import dev.mbo.androidcamera.ui.viewmodels.CameraViewModel
 
 @Composable
-fun HomeScreen(viewModel: HomeViewModel, modifier: Modifier = Modifier) {
+fun CameraScreen(viewModel: CameraViewModel, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val rootView = LocalView.current
     val previewView = remember { PreviewView(context) }

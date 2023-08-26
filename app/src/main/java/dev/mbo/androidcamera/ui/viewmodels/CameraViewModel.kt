@@ -12,7 +12,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import dev.mbo.androidcamera.utils.CameraSizeUtil
 
-class HomeViewModel : ViewModel() {
+class CameraViewModel : ViewModel() {
     private var cameraSize: Size? = null
 
     fun initializeCamera(

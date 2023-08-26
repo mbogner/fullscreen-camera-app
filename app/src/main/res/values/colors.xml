@@ -1,0 +1,6 @@
+<resources>
+    <color name="customPrimary">#FF5722</color>
+    <color name="customBackground">#FAFAFA</color>
+    <color name="customText">#212121</color>
+    <color name="customLink">#1976D2</color>
+</resources>
