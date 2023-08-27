@@ -7,16 +7,17 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import dev.mbo.androidcamera.ui.screens.CameraScreen
 import dev.mbo.androidcamera.ui.screens.StartScreen
+import dev.mbo.androidcamera.ui.viewmodels.StartViewModelProvider
 
 @Composable
 fun NavigationHost() {
     val navController = rememberNavController()
 
-    NavHost(navController, startDestination = "startScreen") {
-        composable("startScreen") {
-            StartScreen(navController = navController)
+    NavHost(navController, startDestination = NavigationTargets.START) {
+        composable(NavigationTargets.START) {
+            StartScreen(viewModel = viewModel(factory = StartViewModelProvider(navController)))
         }
-        composable("cameraScreen") {
+        composable(NavigationTargets.CAMERA) {
             CameraScreen(viewModel = viewModel())
         }
     }

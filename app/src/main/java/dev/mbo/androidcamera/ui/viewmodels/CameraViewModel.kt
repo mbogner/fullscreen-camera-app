@@ -13,7 +13,6 @@ import androidx.lifecycle.ViewModel
 import dev.mbo.androidcamera.utils.CameraSizeUtil
 
 class CameraViewModel : ViewModel() {
-    private var cameraSize: Size? = null
 
     fun initializeCamera(
         previewView: PreviewView,
@@ -25,10 +24,10 @@ class CameraViewModel : ViewModel() {
                 val cameraProvider = cameraProviderFuture.get()
                 val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
-                cameraSize = CameraSizeUtil.getMaxSize(context)!!
+                val cameraSize = CameraSizeUtil.getMaxSize(context)!!
 
                 val preview = Preview.Builder()
-                    .setTargetResolution(cameraSize!!)
+                    .setTargetResolution(cameraSize)
                     .build()
                     .also {
                         it.setSurfaceProvider(previewView.surfaceProvider)
@@ -42,7 +41,7 @@ class CameraViewModel : ViewModel() {
                         preview
                     )
                 } catch (exc: Exception) {
-                    Log.e(TAG, "Use case binding failed", exc)
+                    Log.e(TAG, "binding failed", exc)
                 }
             },
             ContextCompat.getMainExecutor(context)

@@ -9,7 +9,12 @@ import androidx.camera.core.CameraSelector
 
 object CameraSizeUtil {
 
+    private var size: Size? = null
+
     fun getMaxSize(context: Context): Size? {
+        if (null != size) {
+            return size
+        }
         val cameraManager =
             context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
         val cameraId = cameraManager.cameraIdList.firstOrNull {
@@ -19,8 +24,9 @@ object CameraSizeUtil {
         val characteristics = cameraManager.getCameraCharacteristics(cameraId!!)
         val streamConfigurationMap =
             characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
-        return streamConfigurationMap?.getOutputSizes(ImageFormat.JPEG)
+        size = streamConfigurationMap?.getOutputSizes(ImageFormat.JPEG)
             ?.maxByOrNull { it.width * it.height }
+        return size
     }
 
 }
