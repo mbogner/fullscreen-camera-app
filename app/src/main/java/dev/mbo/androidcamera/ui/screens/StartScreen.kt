@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -23,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
@@ -36,67 +36,76 @@ fun StartScreen(viewModel: StartViewModel) {
     val context = LocalContext.current
 
     Column(
-        verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Spacer(modifier = Modifier.height(48.dp))
-        Image(
-            painter = painterResource(id = R.drawable.icon), // Use the image resource
-            contentDescription = null, // Provide a content description if necessary
-            modifier = Modifier.size(200.dp) // Adjust the size as needed
-        )
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-            .wrapContentHeight(align = Alignment.CenterVertically), // Center vertically
-        verticalArrangement = Arrangement.Center, // Center horizontally
+        modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = "Fullscreen Camera", style = MaterialTheme.typography.titleLarge)
+        Image(
+            painter = painterResource(id = R.drawable.icon),
+            contentDescription = "logo",
+            modifier = Modifier
+                .size(300.dp)
+                .padding(0.dp, 30.dp, 0.dp, 0.dp),
+            alignment = Alignment.TopCenter
+        )
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(
-            onClick = { viewModel.startCameraButtonClicked() },
-            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+        Column(
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(0.dp, 30.dp, 0.dp, 0.dp),
         ) {
-            Text(text = "Start Camera")
-        }
-    }
+            Text(
+                text = stringResource(R.string.app_name),
+                style = MaterialTheme.typography.titleLarge,
+            )
 
-    Column(
-        verticalArrangement = Arrangement.Bottom,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Spacer(modifier = Modifier.weight(1f))
-        Text(text = "Useful Links", style = MaterialTheme.typography.bodyMedium)
+            Spacer(modifier = Modifier.height(24.dp))
 
-        Spacer(modifier = Modifier.height(12.dp))
-
-        val annotatedText = buildAnnotatedString {
-            pushStyle(SpanStyle(color = Color.Blue, textDecoration = TextDecoration.Underline))
-            withStyle(style = SpanStyle()) {
-                append("Privacy Policy")
-                addStringAnnotation(
-                    "URL", "https://mbo.dev/assets/policies/android-fullscreen-camera.html", 0, 13
-                )
+            Button(
+                onClick = { viewModel.startCameraButtonClicked() },
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+            ) {
+                Text(text = stringResource(R.string.start_camera_button))
             }
-            pop()
         }
 
-        ClickableText(text = annotatedText, onClick = { offset ->
-            annotatedText.getStringAnnotations("URL", offset, offset).firstOrNull()!!
-                .let { annotation ->
-                    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(annotation.item)))
-                }
-        })
+        Column(
+            verticalArrangement = Arrangement.Bottom,
+            modifier = Modifier.padding(0.dp, 0.dp, 0.dp, 32.dp),
+        ) {
+            Spacer(modifier = Modifier.weight(1f)) // pull to bottom
 
-        Spacer(modifier = Modifier.height(32.dp))
+            Text(
+                text = stringResource(R.string.start_useful_links),
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            val annotatedText = buildAnnotatedString {
+                pushStyle(SpanStyle(color = Color.Blue, textDecoration = TextDecoration.Underline))
+                withStyle(style = SpanStyle()) {
+                    append(stringResource(R.string.start_privacy_policy))
+                    addStringAnnotation(
+                        "URL",
+                        "https://mbo.dev/assets/policies/android-fullscreen-camera.html",
+                        0,
+                        13
+                    )
+                }
+                pop()
+            }
+
+            ClickableText(text = annotatedText, onClick = { offset ->
+                annotatedText.getStringAnnotations("URL", offset, offset).firstOrNull()!!
+                    .let { annotation ->
+                        context.startActivity(
+                            Intent(
+                                Intent.ACTION_VIEW,
+                                Uri.parse(annotation.item)
+                            )
+                        )
+                    }
+            })
+        }
     }
 }
-
