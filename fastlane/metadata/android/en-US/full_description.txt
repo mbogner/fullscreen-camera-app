@@ -1,0 +1,1 @@
+This simple app opens the main camera and displays it via fullscreen without any bars. You can then use a tool like srccpy and stream this feed over usb to your computer to get a cheap webcam. Don't forget to enable fly mode to disable notifications.

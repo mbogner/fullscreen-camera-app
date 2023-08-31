@@ -1,0 +1,97 @@
+# This file contains the fastlane.tools configuration
+# You can find the documentation at https://docs.fastlane.tools
+#
+# For a list of all available actions, check out
+#
+#     https://docs.fastlane.tools/actions
+#
+# For a list of all available plugins, check out
+#
+#     https://docs.fastlane.tools/plugins/available-plugins
+#
+
+update_fastlane
+default_platform(:android)
+
+platform :android do
+
+    def increment_version_code(build_file: 'app/build.gradle.kts', code_increment: 1)
+        version_code = google_play_track_version_codes[0]
+        new_version_code = version_code + code_increment
+        sh %Q{cd .. && sed -i "s/versionCode = .*/versionCode = #{new_version_code}/" #{build_file}}
+        UI.message "increment_version_code: #{version_code} => #{new_version_code}"
+    end
+
+    def increment_version_name(build_file: 'app/build.gradle.kts', increment_major: false, increment_minor: false, increment_hotfix: true)
+        version_code, version_name = google_play_track_release_names[0].split(" ")
+        version_name = version_name.gsub("(", "").gsub(")", "")
+        major, minor, hotfix = version_name.split(".").map(&:to_i)
+        if increment_major == true
+            major += 1
+        end
+        if increment_minor == true
+            minor += 1
+        end
+        if increment_hotfix == true
+            hotfix += 1
+        end
+        UI.message "update version name: #{version_name} => #{major}.#{minor}.#{hotfix}"
+        sh %Q{cd .. && sed -i 's/versionName = \".*\"/versionName = \"#{major}.#{minor}.#{hotfix}\"/' #{build_file}}
+    end
+
+    def prepare_release(build_file: 'app/build.gradle.kts', type: "hotfix")
+        major = type == "major"
+        minor = type == "minor"
+        hotfix = type == "hotfix"
+
+        code_increment = 1
+        if type == 'none'
+            code_increment = 0
+        end
+
+        increment_version_code(build_file: build_file, code_increment: code_increment)
+        increment_version_name(
+            build_file: build_file,
+            increment_major: major,
+            increment_minor: minor,
+            increment_hotfix: hotfix
+        )
+    end
+
+    desc "Runs all the tests"
+    lane :test do
+        gradle(task: "test")
+    end
+
+    desc "Reset release to store"
+    lane :reset_release do
+        prepare_release(type: 'none')
+    end
+
+    desc "Prepare major release"
+    lane :prepare_major_release do
+        prepare_release(type: 'major')
+    end
+
+    desc "Prepare minor release"
+    lane :prepare_minor_release do
+        prepare_release(type: 'minor')
+    end
+
+    desc "Prepare hotfix release"
+    lane :prepare_hotfix_release do
+        prepare_release(type: 'hotfix')
+    end
+
+#     desc "Submit a new Beta Build to Crashlytics Beta"
+#     lane :beta do
+#         gradle(task: "clean assembleRelease")
+#         crashlytics
+#     end
+
+#     desc "Deploy a new version to the Google Play"
+#     lane :deploy do
+#         gradle(task: "clean assembleRelease")
+#         upload_to_play_store
+#     end
+end
