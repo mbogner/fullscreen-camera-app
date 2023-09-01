@@ -1,1 +1,7 @@
-This simple app opens the main camera and displays it via fullscreen without any bars. You can then use a tool like scrcpy and stream this feed over usb to your computer to get a cheap camera. Don't forget to enable fly mode to disable notifications.
+This simple app opens the main camera and displays it via fullscreen without any bars in full resolution.
+
+It is not intended to take pictures or actively stream to web.
+You can connect the phone via USB and use scrcpy to stream the feed to your computer and then use OBS to record it or create a webcam out of it.
+This is a very easy and cheap way to create a proper USB based webcam out of your Android phone.
+
+And the best: There is no recurring cost or watermarks - this app is free and open source.

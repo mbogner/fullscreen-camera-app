@@ -1,1 +1,1 @@
-Displays the main camera in fullscreen for streaming it with scrcpy.
+Displays the main camera in fullscreen for streaming it with scrcpy via USB.
