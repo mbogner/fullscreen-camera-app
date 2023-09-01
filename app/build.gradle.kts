@@ -11,8 +11,8 @@ android {
         applicationId = "dev.mbo.androidcamera"
         minSdk = 30
         targetSdk = 33
-        versionCode = 5
-        versionName = "1.0.4"
+        versionCode = 8
+        versionName = "1.0.7"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

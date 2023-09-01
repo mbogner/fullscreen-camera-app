@@ -82,6 +82,7 @@ fun StartScreen(viewModel: StartViewModel) {
             Spacer(modifier = Modifier.height(12.dp))
 
             val annotatedText = buildAnnotatedString {
+                // First link
                 pushStyle(SpanStyle(color = Color.Blue, textDecoration = TextDecoration.Underline))
                 withStyle(style = SpanStyle()) {
                     append(stringResource(R.string.start_privacy_policy))
@@ -93,18 +94,36 @@ fun StartScreen(viewModel: StartViewModel) {
                     )
                 }
                 pop()
+
+                append("\n")
+                append("\n")
+
+                // Second link
+                pushStyle(SpanStyle(color = Color.Blue, textDecoration = TextDecoration.Underline))
+                withStyle(style = SpanStyle(textDecoration = TextDecoration.Underline)) {
+                    append(stringResource(R.string.start_coffee))
+                    addStringAnnotation(
+                        "URL",
+                        "https://paypal.me/mbogner85",
+                        18,
+                        33
+                    )
+                }
+                pop()
             }
 
             ClickableText(text = annotatedText, onClick = { offset ->
-                annotatedText.getStringAnnotations("URL", offset, offset).firstOrNull()!!
-                    .let { annotation ->
-                        context.startActivity(
-                            Intent(
-                                Intent.ACTION_VIEW,
-                                Uri.parse(annotation.item)
+                offset.let { clickedOffset ->
+                    annotatedText.getStringAnnotations("URL", clickedOffset, clickedOffset)
+                        .firstOrNull()?.let { annotation ->
+                            context.startActivity(
+                                Intent(
+                                    Intent.ACTION_VIEW,
+                                    Uri.parse(annotation.item)
+                                )
                             )
-                        )
-                    }
+                        }
+                }
             })
         }
     }

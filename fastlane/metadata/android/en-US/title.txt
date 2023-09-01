@@ -1,1 +1,1 @@
-Fullscreen Camera
+Fullscreen USB StreamCam

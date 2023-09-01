@@ -14,6 +14,56 @@ update_fastlane
 default_platform(:android)
 
 platform :android do
+    project_path = ENV['PWD']
+    UI.message "Always run fastlane from project root! Actual directory: #{project_path}"
+
+    desc "Runs all the tests"
+    lane :test do
+        gradle(task: "test")
+    end
+
+    desc "Reset release to store"
+    lane :reset_release do
+        prepare_release(type: 'none')
+    end
+
+    desc "Prepare major release"
+    lane :prepare_major_release do
+        prepare_release(type: 'major')
+    end
+
+    desc "Prepare minor release"
+    lane :prepare_minor_release do
+        prepare_release(type: 'minor')
+    end
+
+    desc "Prepare hotfix release"
+    lane :prepare_hotfix_release do
+        prepare_release(type: 'hotfix')
+    end
+
+    desc "Deploy a new version to the Google Play"
+    lane :deploy do
+        jks_storepass = read_line_from_file(file: "#{project_path}/android_key.jks.store_password")
+
+        jks_alias = read_line_from_file(file: "#{project_path}/android_key.jks.alias")
+        jks_keypass = read_line_from_file(file: "#{project_path}/android_key.jks.key_password")
+
+        gradle(
+            task: "clean bundle",
+            build_type: "release",
+            print_command: false,
+            properties: {
+                "android.injected.signing.store.file" => "#{project_path}/android_key.jks",
+                "android.injected.signing.store.password" => jks_storepass,
+                "android.injected.signing.key.alias" => jks_alias,
+                "android.injected.signing.key.password" => jks_keypass,
+            }
+        )
+        upload_to_play_store
+    end
+
+    ################################################################################################
 
     def increment_version_code(build_file: 'app/build.gradle.kts', code_increment: 1)
         version_code = google_play_track_version_codes[0]
@@ -24,6 +74,9 @@ platform :android do
 
     def increment_version_name(build_file: 'app/build.gradle.kts', increment_major: false, increment_minor: false, increment_hotfix: true)
         version_code, version_name = google_play_track_release_names[0].split(" ")
+        if version_name == nil
+            version_name = version_code
+        end
         version_name = version_name.gsub("(", "").gsub(")", "")
         major, minor, hotfix = version_name.split(".").map(&:to_i)
         if increment_major == true
@@ -58,40 +111,8 @@ platform :android do
         )
     end
 
-    desc "Runs all the tests"
-    lane :test do
-        gradle(task: "test")
+    def read_line_from_file(file: "")
+        UI.message "reading #{file}"
+        return File.read(file).gsub(/\n/, "").strip
     end
-
-    desc "Reset release to store"
-    lane :reset_release do
-        prepare_release(type: 'none')
-    end
-
-    desc "Prepare major release"
-    lane :prepare_major_release do
-        prepare_release(type: 'major')
-    end
-
-    desc "Prepare minor release"
-    lane :prepare_minor_release do
-        prepare_release(type: 'minor')
-    end
-
-    desc "Prepare hotfix release"
-    lane :prepare_hotfix_release do
-        prepare_release(type: 'hotfix')
-    end
-
-#     desc "Submit a new Beta Build to Crashlytics Beta"
-#     lane :beta do
-#         gradle(task: "clean assembleRelease")
-#         crashlytics
-#     end
-
-#     desc "Deploy a new version to the Google Play"
-#     lane :deploy do
-#         gradle(task: "clean assembleRelease")
-#         upload_to_play_store
-#     end
 end
