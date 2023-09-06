@@ -29,17 +29,20 @@ platform :android do
 
     desc "Prepare major release"
     lane :prepare_major_release do
-        prepare_release(type: 'major')
+        next_version = prepare_release(type: 'major')
+        update_changelog(next_version: next_version, changelog_file: "#{project_path}/changelog.md")
     end
 
     desc "Prepare minor release"
     lane :prepare_minor_release do
-        prepare_release(type: 'minor')
+        next_version = prepare_release(type: 'minor')
+        update_changelog(next_version: next_version, changelog_file: "#{project_path}/changelog.md")
     end
 
     desc "Prepare hotfix release"
     lane :prepare_hotfix_release do
-        prepare_release(type: 'hotfix')
+        next_version = prepare_release(type: 'hotfix')
+        update_changelog(next_version: next_version, changelog_file: "#{project_path}/changelog.md")
     end
 
     desc "Deploy a new version to the Google Play"
@@ -49,38 +52,36 @@ platform :android do
         jks_alias = read_line_from_file(file: "#{project_path}/android_key.jks.alias")
         jks_keypass = read_line_from_file(file: "#{project_path}/android_key.jks.key_password")
 
-#         gradle(
-#             task: "clean bundle",
-#             build_type: "release",
-#             print_command: false,
-#             properties: {
-#                 "android.injected.signing.store.file" => "#{project_path}/android_key.jks",
-#                 "android.injected.signing.store.password" => jks_storepass,
-#                 "android.injected.signing.key.alias" => jks_alias,
-#                 "android.injected.signing.key.password" => jks_keypass,
-#             }
-#         )
+        gradle(
+            task: "clean bundle",
+            build_type: "release",
+            print_command: false,
+            properties: {
+                "android.injected.signing.store.file" => "#{project_path}/android_key.jks",
+                "android.injected.signing.store.password" => jks_storepass,
+                "android.injected.signing.key.alias" => jks_alias,
+                "android.injected.signing.key.password" => jks_keypass,
+            }
+        )
 
-        update_changelog()
-#         upload_to_play_store
+        upload_to_play_store
     end
 
     ################################################################################################
 
-    def update_changelog(build_file: 'app/build.gradle.kts', changelog_file: './changelog.txt')
-        preparedVersionName = sh %Q{cd .. && grep -i "versionName =" #{build_file}}
-        preparedVersionName = preparedVersionName.strip.gsub("versionName =","")
-        preparedVersionName = preparedVersionName.strip.gsub("\"", "")
+    def update_changelog(next_version: '', changelog_file: '')
         changes = changelog_from_git_commits(
             pretty: "- %s",
             date_format: "short"
         )
-        changelog = "v#{preparedVersionName}:\n\n#{changes}\n-------------------\n"
-        git_commit(path: [build_file, changelog_file, "./fastlane/Fastfile"], message: "Version Bump")
-        push_to_git_remote(tags: true)
-        UI.message "changelog:\n#{changelog}"
-        log = changelog + read_file(changelog_file)
-        write_file(file: changelog_file, content: log)
+        changelog = "# v#{next_version}:\n\n#{changes}\n\n-------------------\n"
+
+        old_content = read_file(file: changelog_file)
+        if !old_content.include?("v#{next_version}")
+            log = changelog + "\n" + read_file(file: changelog_file)
+            write_file(file: changelog_file, content: log)
+            UI.message "updated changelog with:\n#{changelog}"
+        end
     end
 
     def increment_version_code(build_file: 'app/build.gradle.kts', code_increment: 1)
