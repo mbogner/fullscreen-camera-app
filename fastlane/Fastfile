@@ -77,7 +77,7 @@ platform :android do
         )
         changelog = "v#{preparedVersionName}:\n\n#{changes}\n-------------------\n"
         git_commit(path: [build_file, changelog_file, "./fastlane/Fastfile"], message: "Version Bump")
-        git_push
+        push_to_git_remote(tags: true)
         UI.message "changelog:\n#{changelog}"
         log = changelog + read_file(changelog_file)
         write_file(file: changelog_file, content: log)
