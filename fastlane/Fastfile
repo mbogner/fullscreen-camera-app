@@ -49,27 +49,45 @@ platform :android do
         jks_alias = read_line_from_file(file: "#{project_path}/android_key.jks.alias")
         jks_keypass = read_line_from_file(file: "#{project_path}/android_key.jks.key_password")
 
-        gradle(
-            task: "clean bundle",
-            build_type: "release",
-            print_command: false,
-            properties: {
-                "android.injected.signing.store.file" => "#{project_path}/android_key.jks",
-                "android.injected.signing.store.password" => jks_storepass,
-                "android.injected.signing.key.alias" => jks_alias,
-                "android.injected.signing.key.password" => jks_keypass,
-            }
-        )
-        upload_to_play_store
+#         gradle(
+#             task: "clean bundle",
+#             build_type: "release",
+#             print_command: false,
+#             properties: {
+#                 "android.injected.signing.store.file" => "#{project_path}/android_key.jks",
+#                 "android.injected.signing.store.password" => jks_storepass,
+#                 "android.injected.signing.key.alias" => jks_alias,
+#                 "android.injected.signing.key.password" => jks_keypass,
+#             }
+#         )
+
+        update_changelog()
+#         upload_to_play_store
     end
 
     ################################################################################################
+
+    def update_changelog(build_file: 'app/build.gradle.kts', changelog_file: './changelog.txt')
+        preparedVersionName = sh %Q{cd .. && grep -i "versionName =" #{build_file}}
+        preparedVersionName = preparedVersionName.strip.gsub("versionName =","")
+        preparedVersionName = preparedVersionName.strip.gsub("\"", "")
+        changes = changelog_from_git_commits(
+            pretty: "- %s",
+            date_format: "short"
+        )
+        changelog = "v#{preparedVersionName}:\n\n#{changes}\n-------------------\n"
+        git_commit(path: [build_file, changelog_file, "./fastlane/Fastfile"], message: "Version Bump")
+        UI.message "changelog:\n#{changelog}"
+        log = changelog + read_file(changelog_file)
+        write_file(file: changelog_file, content: log)
+    end
 
     def increment_version_code(build_file: 'app/build.gradle.kts', code_increment: 1)
         version_code = google_play_track_version_codes[0]
         new_version_code = version_code + code_increment
         sh %Q{cd .. && sed -i "s/versionCode = .*/versionCode = #{new_version_code}/" #{build_file}}
         UI.message "increment_version_code: #{version_code} => #{new_version_code}"
+        return new_version_code
     end
 
     def increment_version_name(build_file: 'app/build.gradle.kts', increment_major: false, increment_minor: false, increment_hotfix: true)
@@ -90,6 +108,7 @@ platform :android do
         end
         UI.message "update version name: #{version_name} => #{major}.#{minor}.#{hotfix}"
         sh %Q{cd .. && sed -i 's/versionName = \".*\"/versionName = \"#{major}.#{minor}.#{hotfix}\"/' #{build_file}}
+        return "#{major}.#{minor}.#{hotfix}"
     end
 
     def prepare_release(build_file: 'app/build.gradle.kts', type: "hotfix")
@@ -103,7 +122,7 @@ platform :android do
         end
 
         increment_version_code(build_file: build_file, code_increment: code_increment)
-        increment_version_name(
+        return increment_version_name(
             build_file: build_file,
             increment_major: major,
             increment_minor: minor,
@@ -112,7 +131,19 @@ platform :android do
     end
 
     def read_line_from_file(file: "")
-        UI.message "reading #{file}"
-        return File.read(file).gsub(/\n/, "").strip
+        UI.message "read_line_from_file #{file}"
+        return read_file(file: file).gsub(/\n/, "").strip
+    end
+
+    def read_file(file: "")
+        UI.message "read_file #{file}"
+        return File.read(file)
+    end
+
+    def write_file(content: "", file: "")
+        UI.message "write_file #{file}"
+        File.open(file, "w") { |f|
+            f.write(content)
+        }
     end
 end
