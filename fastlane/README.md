@@ -55,6 +55,14 @@ Prepare minor release
 
 Prepare hotfix release
 
+### android tag
+
+```sh
+[bundle exec] fastlane android tag
+```
+
+tag and push
+
 ### android deploy
 
 ```sh

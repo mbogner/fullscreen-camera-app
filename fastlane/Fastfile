@@ -45,8 +45,24 @@ platform :android do
         update_changelog(next_version: next_version, changelog_file: "#{project_path}/changelog.md")
     end
 
+    desc "tag and push"
+    lane :tag do
+        ensure_git_status_clean
+        build_version = read_version()
+
+        UI.message "tagging:\n#{build_version}"
+        add_git_tag(
+          tag: "v#{build_version}"
+        )
+        push_to_git_remote(
+            tags: true
+        )
+    end
+
     desc "Deploy a new version to the Google Play"
     lane :deploy do
+        ensure_git_status_clean
+
         jks_storepass = read_line_from_file(file: "#{project_path}/android_key.jks.store_password")
 
         jks_alias = read_line_from_file(file: "#{project_path}/android_key.jks.alias")
@@ -147,5 +163,11 @@ platform :android do
         File.open(file, "w") { |f|
             f.write(content)
         }
+    end
+
+    def read_version(build_file: 'app/build.gradle.kts')
+        preparedVersionName = sh %Q{cd .. && grep -i "versionName =" #{build_file}}
+        preparedVersionName = preparedVersionName.strip.gsub("versionName =","")
+        preparedVersionName = preparedVersionName.strip.gsub("\"", "")
     end
 end
