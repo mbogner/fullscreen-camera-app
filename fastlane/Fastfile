@@ -127,7 +127,7 @@ platform :android do
         end
         UI.message "update version name: #{version_name} => #{major}.#{minor}.#{hotfix}"
         backup_flag = RUBY_PLATFORM.include?("darwin") ? "-i ''" : "-i"
-        sh %Q{cd .. && sed #{backup_flag} "s/versionName = .*/versionName = \"#{major}.#{minor}.#{hotfix}\"/" "#{build_file}"}
+        sh %Q{cd .. && sed #{backup_flag} "s/versionName = .*/versionName = \\\"#{major}.#{minor}.#{hotfix}\\\"/" "#{build_file}"}
         return "#{major}.#{minor}.#{hotfix}"
     end
 
