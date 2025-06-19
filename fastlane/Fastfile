@@ -98,6 +98,9 @@ platform :android do
             write_file(file: changelog_file, content: log)
             UI.message "updated changelog with:\n#{changelog}"
         end
+
+        version_code = google_play_track_version_codes[0]
+        write_file(file: "fastlane/metadata/android/en-US/changelogs/#{version_code}.txt", content: changelog)
     end
 
     def increment_version_code(build_file: 'app/build.gradle.kts', code_increment: 1)
