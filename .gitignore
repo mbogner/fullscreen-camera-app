@@ -12,3 +12,4 @@ local.properties
 release/
 *.jks
 *.jks.*
+fastlane/keyfile.json
