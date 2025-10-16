@@ -13,8 +13,10 @@
 update_fastlane
 default_platform(:android)
 
+REPO_ROOT = File.expand_path("..", __dir__)
+
 platform :android do
-    project_path = ENV['PWD']
+    project_path = REPO_ROOT
     UI.message "Always run fastlane from project root! Actual directory: #{project_path}"
 
     desc "Runs all the tests"
@@ -86,21 +88,27 @@ platform :android do
     ################################################################################################
 
     def update_changelog(next_version: '', changelog_file: '')
-        changes = changelog_from_git_commits(
-            pretty: "- %s",
-            date_format: "short"
-        )
-        changelog = "# v#{next_version}:\n\n#{changes}\n\n-------------------\n"
+      changes = changelog_from_git_commits(
+        pretty: "- %s",
+        date_format: "short"
+      )
+      changelog = "# v#{next_version}:\n\n#{changes}\n\n-------------------\n"
 
-        old_content = read_file(file: changelog_file)
-        if !old_content.include?("v#{next_version}")
-            log = changelog + "\n" + read_file(file: changelog_file)
-            write_file(file: changelog_file, content: log)
-            UI.message "updated changelog with:\n#{changelog}"
-        end
+      old_content = read_file(file: changelog_file)
+      unless old_content.include?("v#{next_version}")
+        log = changelog + "\n" + old_content
+        write_file(file: changelog_file, content: log)
+        UI.message "updated changelog with:\n#{changelog}"
+      end
 
-        version_code = google_play_track_version_codes[0]
-        write_file(file: "fastlane/metadata/android/en-US/changelogs/#{version_code}.txt", content: changelog)
+      # Play still reports the *current* code (e.g., 15).
+      current_store_code = google_play_track_version_codes.max
+      next_code = current_store_code + 1  # we just bumped to this
+
+      write_file(
+        file: "fastlane/metadata/android/en-US/changelogs/#{next_code}.txt",
+        content: changelog
+      )
     end
 
     def increment_version_code(build_file: 'app/build.gradle.kts', code_increment: 1)
@@ -174,5 +182,22 @@ platform :android do
         preparedVersionName = sh %Q{cd .. && grep -i "versionName =" #{build_file}}
         preparedVersionName = preparedVersionName.strip.gsub("versionName =","")
         preparedVersionName = preparedVersionName.strip.gsub("\"", "")
+    end
+
+    def abs(path)
+      File.expand_path(path, REPO_ROOT)
+    end
+
+    def read_file(file: "")
+      UI.message "read_file #{abs(file)}"
+      File.read(abs(file))
+    end
+
+    def write_file(content: "", file: "")
+      require "fileutils"
+      target = abs(file)
+      FileUtils.mkdir_p(File.dirname(target))   # ensure folders exist
+      UI.message "write_file #{target}"
+      File.open(target, "w") { |f| f.write(content) }
     end
 end

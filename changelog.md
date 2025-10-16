@@ -1,3 +1,10 @@
+# v1.1.15:
+
+- update gradle
+- prepare release 1.1.14
+
+-------------------
+
 # v1.1.14:
 
 - fix version?
