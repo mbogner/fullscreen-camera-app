@@ -88,7 +88,7 @@ fun StartScreen(viewModel: StartViewModel) {
                     append(stringResource(R.string.start_privacy_policy))
                     addStringAnnotation(
                         "URL",
-                        "https://mbo.dev/assets/policies/android-fullscreen-camera.html",
+                        "https://mbo.dev/policies/android-fullscreen-camera.html",
                         0,
                         13
                     )
