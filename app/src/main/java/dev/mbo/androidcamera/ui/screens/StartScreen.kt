@@ -30,6 +30,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import dev.mbo.androidcamera.R
 import dev.mbo.androidcamera.ui.viewmodels.StartViewModel
+import androidx.core.net.toUri
 
 @Composable
 fun StartScreen(viewModel: StartViewModel) {
@@ -119,7 +120,7 @@ fun StartScreen(viewModel: StartViewModel) {
                             context.startActivity(
                                 Intent(
                                     Intent.ACTION_VIEW,
-                                    Uri.parse(annotation.item)
+                                    annotation.item.toUri()
                                 )
                             )
                         }
