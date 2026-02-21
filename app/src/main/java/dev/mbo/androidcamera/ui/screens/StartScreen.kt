@@ -15,6 +15,9 @@ import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -28,6 +31,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.camera.core.CameraSelector
 import dev.mbo.androidcamera.R
 import dev.mbo.androidcamera.ui.viewmodels.StartViewModel
 import androidx.core.net.toUri
@@ -35,6 +39,7 @@ import androidx.core.net.toUri
 @Composable
 fun StartScreen(viewModel: StartViewModel) {
     val context = LocalContext.current
+    val useFrontCamera = viewModel.selectedLensFacing == CameraSelector.LENS_FACING_FRONT
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -58,6 +63,25 @@ fun StartScreen(viewModel: StartViewModel) {
                 text = stringResource(R.string.app_name),
                 style = MaterialTheme.typography.titleLarge,
             )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            SingleChoiceSegmentedButtonRow {
+                SegmentedButton(
+                    selected = !useFrontCamera,
+                    onClick = { viewModel.onCameraLensFacingChanged(false) },
+                    shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
+                ) {
+                    Text(text = stringResource(R.string.start_camera_selector_back))
+                }
+                SegmentedButton(
+                    selected = useFrontCamera,
+                    onClick = { viewModel.onCameraLensFacingChanged(true) },
+                    shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
+                ) {
+                    Text(text = stringResource(R.string.start_camera_selector_front))
+                }
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 

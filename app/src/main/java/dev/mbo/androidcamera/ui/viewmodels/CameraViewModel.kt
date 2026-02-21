@@ -16,13 +16,18 @@ class CameraViewModel : ViewModel() {
 
     fun initializeCamera(
         previewView: PreviewView,
-        context: Context
+        context: Context,
+        lensFacing: Int
     ) {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
         cameraProviderFuture.addListener(
             {
                 val cameraProvider = cameraProviderFuture.get()
-                val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+                val cameraSelector = if (lensFacing == CameraSelector.LENS_FACING_FRONT) {
+                    CameraSelector.DEFAULT_FRONT_CAMERA
+                } else {
+                    CameraSelector.DEFAULT_BACK_CAMERA
+                }
 
                 val cameraSize = CameraSizeUtil.getMaxSize(context)!!
 

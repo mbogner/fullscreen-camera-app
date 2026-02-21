@@ -13,7 +13,7 @@ import androidx.core.view.WindowInsetsCompat
 import dev.mbo.androidcamera.ui.viewmodels.CameraViewModel
 
 @Composable
-fun CameraScreen(viewModel: CameraViewModel, modifier: Modifier = Modifier) {
+fun CameraScreen(viewModel: CameraViewModel, lensFacing: Int, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val rootView = LocalView.current
     val previewView = remember { PreviewView(context) }
@@ -23,11 +23,10 @@ fun CameraScreen(viewModel: CameraViewModel, modifier: Modifier = Modifier) {
         modifier = modifier.fillMaxSize(),
         factory = { previewView }
     ) {
-        viewModel.initializeCamera(previewView, context)
+        viewModel.initializeCamera(previewView, context, lensFacing)
 
         windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
         windowInsetsController.systemBarsBehavior =
             WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
     }
 }
-
