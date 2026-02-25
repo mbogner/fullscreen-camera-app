@@ -18,6 +18,15 @@ platform :android do
             app_apk_path: "#{REPO_ROOT}/app/build/outputs/apk/debug/app-debug.apk",
             tests_apk_path: "#{REPO_ROOT}/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk"
         )
+
+        # Copy phone screenshots to tablet directories for Play Store completeness
+        phone_dir = "#{REPO_ROOT}/fastlane/metadata/android/en-US/images/phoneScreenshots"
+        %w[sevenInchScreenshots tenInchScreenshots].each do |dir|
+            target = "#{REPO_ROOT}/fastlane/metadata/android/en-US/images/#{dir}"
+            FileUtils.mkdir_p(target)
+            FileUtils.cp_r(Dir.glob("#{phone_dir}/*"), target)
+            UI.message "Copied phone screenshots to #{dir}"
+        end
     end
 
     desc "Prepare major release (bumps MAJOR version)"
