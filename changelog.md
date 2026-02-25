@@ -1,3 +1,13 @@
+# v1.4.1:
+
+- fix double tap start camera problem
+- add unit tests for the project
+- get rid of some warnings and unnecessary files
+- placed gitignore in wrong dir
+- update screenshots in different folders
+
+-------------------
+
 # v1.3.1:
 
 - introduce back/front switch
