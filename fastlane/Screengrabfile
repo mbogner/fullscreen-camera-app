@@ -1,0 +1,11 @@
+app_package_name("dev.mbo.androidcamera")
+use_tests_in_classes(["dev.mbo.androidcamera.ScreenshotTest"])
+
+locales(["en-US"])
+
+output_directory("fastlane/metadata/android")
+
+clear_previous_screenshots(true)
+
+use_adb_root(true)
+use_timestamp_suffix(false)

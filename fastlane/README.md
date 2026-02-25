@@ -1,80 +1,72 @@
-fastlane documentation
-----
+# Fastlane Release Guide
 
-# Installation
+## Prerequisites
 
-Make sure you have the latest version of the Xcode command line tools installed:
+- Ruby (managed via system or rbenv)
+- Bundler: `gem install bundler`
+- Dependencies: `bundle install` (run from project root)
+- Signing key files in project root: `android_key.jks`, `.alias`, `.key_password`, `.store_password`
+- Google Play service account key: `fastlane/keyfile.json`
+- For screenshots: a connected Android device or running emulator
 
-```sh
-xcode-select --install
-```
+All fastlane commands **must** be run from the `fastlane/` directory using `bundle exec`.
 
-For _fastlane_ installation instructions, see [Installing _fastlane_](https://docs.fastlane.tools/#installing-fastlane)
+## Release Workflow
 
-# Available Actions
-
-## Android
-
-### android test
+### 1. Run Tests
 
 ```sh
-[bundle exec] fastlane android test
+bundle exec fastlane android test
 ```
 
-Runs all the tests
+### 2. Capture Screenshots (requires connected device)
 
-### android reset_release
+Builds the debug APK and test APK, then runs the screenshot tests on the connected device:
 
 ```sh
-[bundle exec] fastlane android reset_release
+bundle exec fastlane android screenshots
 ```
 
-Reset release to store
+Screenshots are saved to `fastlane/metadata/android/en-US/images/` and will be uploaded with the next deploy.
 
-### android prepare_major_release
+### 3. Prepare Release
+
+Fetches the current version from Google Play, increments it, and generates the changelog from git commits.
 
 ```sh
-[bundle exec] fastlane android prepare_major_release
+# Bump hotfix (1.3.0 → 1.3.1)
+bundle exec fastlane android prepare_hotfix_release
+
+# Bump minor (1.3.0 → 1.4.0)
+bundle exec fastlane android prepare_minor_release
+
+# Bump major (1.3.0 → 2.0.0)
+bundle exec fastlane android prepare_major_release
 ```
 
-Prepare major release
+This updates `versionCode` and `versionName` in `app/build.gradle.kts` and writes changelogs to both `changelog.md` and `fastlane/metadata/android/en-US/changelogs/`.
 
-### android prepare_minor_release
+### 4. Commit, Tag, and Push
+
+Commit the version bump and changelog, then tag:
 
 ```sh
-[bundle exec] fastlane android prepare_minor_release
+git add -A && git commit -m "prepare release X.Y.Z"
+bundle exec fastlane android tag
 ```
 
-Prepare minor release
+### 5. Deploy to Google Play
 
-### android prepare_hotfix_release
+Builds the signed release AAB and uploads it (with metadata and screenshots) to Google Play:
 
 ```sh
-[bundle exec] fastlane android prepare_hotfix_release
+bundle exec fastlane android deploy
 ```
 
-Prepare hotfix release
+## Updating Fastlane
 
-### android tag
+Fastlane version is pinned in `Gemfile`. To update:
 
 ```sh
-[bundle exec] fastlane android tag
+bundle update fastlane
 ```
-
-tag and push
-
-### android deploy
-
-```sh
-[bundle exec] fastlane android deploy
-```
-
-Deploy a new version to the Google Play
-
-----
-
-This README.md is auto-generated and will be re-generated every time [_fastlane_](https://fastlane.tools) is run.
-
-More information about _fastlane_ can be found on [fastlane.tools](https://fastlane.tools).
-
-The documentation of _fastlane_ can be found on [docs.fastlane.tools](https://docs.fastlane.tools).

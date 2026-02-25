@@ -7,4 +7,7 @@
     <string name="start_useful_links">Useful Links</string>
     <string name="start_privacy_policy">Privacy Policy</string>
     <string name="start_coffee">buy me a coffee</string>
+
+    <string name="permission_required">Camera permission is required to use this app.</string>
+    <string name="permission_grant">Grant Permission</string>
 </resources>

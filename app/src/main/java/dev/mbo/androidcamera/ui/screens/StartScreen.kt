@@ -1,17 +1,14 @@
 package dev.mbo.androidcamera.ui.screens
 
-import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -23,26 +20,27 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.camera.core.CameraSelector
 import dev.mbo.androidcamera.R
 import dev.mbo.androidcamera.ui.viewmodels.StartViewModel
-import androidx.core.net.toUri
 
 @Composable
-fun StartScreen(viewModel: StartViewModel) {
-    val context = LocalContext.current
+fun StartScreen(viewModel: StartViewModel, onStartCamera: () -> Unit) {
     val useFrontCamera = viewModel.selectedLensFacing == CameraSelector.LENS_FACING_FRONT
 
     Column(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .safeDrawingPadding(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Image(
@@ -86,7 +84,7 @@ fun StartScreen(viewModel: StartViewModel) {
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = { viewModel.startCameraButtonClicked() },
+                onClick = onStartCamera,
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
                 Text(text = stringResource(R.string.start_camera_button))
@@ -97,7 +95,7 @@ fun StartScreen(viewModel: StartViewModel) {
             verticalArrangement = Arrangement.Bottom,
             modifier = Modifier.padding(0.dp, 0.dp, 0.dp, 32.dp),
         ) {
-            Spacer(modifier = Modifier.weight(1f)) // pull to bottom
+            Spacer(modifier = Modifier.weight(1f))
 
             Text(
                 text = stringResource(R.string.start_useful_links),
@@ -107,49 +105,20 @@ fun StartScreen(viewModel: StartViewModel) {
             Spacer(modifier = Modifier.height(12.dp))
 
             val annotatedText = buildAnnotatedString {
-                // First link
-                pushStyle(SpanStyle(color = Color.Blue, textDecoration = TextDecoration.Underline))
-                withStyle(style = SpanStyle()) {
-                    append(stringResource(R.string.start_privacy_policy))
-                    addStringAnnotation(
-                        "URL",
-                        "https://mbo.dev/policies/android-fullscreen-camera.html",
-                        0,
-                        13
-                    )
+                withLink(LinkAnnotation.Url("https://mbo.dev/policies/android-fullscreen-camera.html")) {
+                    withStyle(SpanStyle(color = Color.Blue, textDecoration = TextDecoration.Underline)) {
+                        append(stringResource(R.string.start_privacy_policy))
+                    }
                 }
-                pop()
-
-                append("\n")
-                append("\n")
-
-                // Second link
-                pushStyle(SpanStyle(color = Color.Blue, textDecoration = TextDecoration.Underline))
-                withStyle(style = SpanStyle(textDecoration = TextDecoration.Underline)) {
-                    append(stringResource(R.string.start_coffee))
-                    addStringAnnotation(
-                        "URL",
-                        "https://paypal.me/mbogner85",
-                        18,
-                        33
-                    )
+                append("\n\n")
+                withLink(LinkAnnotation.Url("https://paypal.me/mbogner85")) {
+                    withStyle(SpanStyle(color = Color.Blue, textDecoration = TextDecoration.Underline)) {
+                        append(stringResource(R.string.start_coffee))
+                    }
                 }
-                pop()
             }
 
-            ClickableText(text = annotatedText, onClick = { offset ->
-                offset.let { clickedOffset ->
-                    annotatedText.getStringAnnotations("URL", clickedOffset, clickedOffset)
-                        .firstOrNull()?.let { annotation ->
-                            context.startActivity(
-                                Intent(
-                                    Intent.ACTION_VIEW,
-                                    annotation.item.toUri()
-                                )
-                            )
-                        }
-                }
-            })
+            Text(text = annotatedText)
         }
     }
 }

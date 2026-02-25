@@ -1,156 +1,140 @@
-# This file contains the fastlane.tools configuration
-# You can find the documentation at https://docs.fastlane.tools
-#
-# For a list of all available actions, check out
-#
-#     https://docs.fastlane.tools/actions
-#
-# For a list of all available plugins, check out
-#
-#     https://docs.fastlane.tools/plugins/available-plugins
-#
-
-update_fastlane
 default_platform(:android)
+skip_docs
 
 REPO_ROOT = File.expand_path("..", __dir__)
 
 platform :android do
-    project_path = REPO_ROOT
-    UI.message "Always run fastlane from project root! Actual directory: #{project_path}"
+    UI.message "Project root: #{REPO_ROOT}"
 
     desc "Runs all the tests"
     lane :test do
-        gradle(task: "test")
+        gradle(task: "test", project_dir: REPO_ROOT)
     end
 
-    desc "Reset release to store"
-    lane :reset_release do
-        prepare_release(type: 'none')
+    desc "Capture screenshots on a connected device"
+    lane :screenshots do
+        gradle(task: "assembleDebug assembleAndroidTest", project_dir: REPO_ROOT)
+        screengrab(
+            app_apk_path: "#{REPO_ROOT}/app/build/outputs/apk/debug/app-debug.apk",
+            tests_apk_path: "#{REPO_ROOT}/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk"
+        )
     end
 
-    desc "Prepare major release"
+    desc "Prepare major release (bumps MAJOR version)"
     lane :prepare_major_release do
         next_version = prepare_release(type: 'major')
-        update_changelog(next_version: next_version, changelog_file: "#{project_path}/changelog.md")
+        update_changelog(next_version: next_version, changelog_file: "changelog.md")
     end
 
-    desc "Prepare minor release"
+    desc "Prepare minor release (bumps MINOR version)"
     lane :prepare_minor_release do
         next_version = prepare_release(type: 'minor')
-        update_changelog(next_version: next_version, changelog_file: "#{project_path}/changelog.md")
+        update_changelog(next_version: next_version, changelog_file: "changelog.md")
     end
 
-    desc "Prepare hotfix release"
+    desc "Prepare hotfix release (bumps HOTFIX version)"
     lane :prepare_hotfix_release do
         next_version = prepare_release(type: 'hotfix')
-        update_changelog(next_version: next_version, changelog_file: "#{project_path}/changelog.md")
+        update_changelog(next_version: next_version, changelog_file: "changelog.md")
     end
 
-    desc "tag and push"
+    desc "Create git tag and push"
     lane :tag do
         ensure_git_status_clean
         build_version = read_version()
 
-        UI.message "tagging:\n#{build_version}"
-        add_git_tag(
-          tag: "v#{build_version}"
-        )
-        push_to_git_remote(
-            tags: true
-        )
+        UI.message "Tagging v#{build_version}"
+        add_git_tag(tag: "v#{build_version}")
+        push_to_git_remote(tags: true)
     end
 
-    desc "Deploy a new version to the Google Play"
+    desc "Build signed AAB and upload to Google Play"
     lane :deploy do
         ensure_git_status_clean
 
-        jks_storepass = read_line_from_file(file: "#{project_path}/android_key.jks.store_password")
-
-        jks_alias = read_line_from_file(file: "#{project_path}/android_key.jks.alias")
-        jks_keypass = read_line_from_file(file: "#{project_path}/android_key.jks.key_password")
+        jks_storepass = read_line_from_file(file: "android_key.jks.store_password")
+        jks_alias = read_line_from_file(file: "android_key.jks.alias")
+        jks_keypass = read_line_from_file(file: "android_key.jks.key_password")
 
         gradle(
             task: "clean bundle",
             build_type: "release",
             print_command: false,
+            project_dir: REPO_ROOT,
             properties: {
-                "android.injected.signing.store.file" => "#{project_path}/android_key.jks",
+                "android.injected.signing.store.file" => "#{REPO_ROOT}/android_key.jks",
                 "android.injected.signing.store.password" => jks_storepass,
                 "android.injected.signing.key.alias" => jks_alias,
                 "android.injected.signing.key.password" => jks_keypass,
             }
         )
 
-        upload_to_play_store
+        upload_to_play_store(
+            track: "production",
+            aab: "#{REPO_ROOT}/app/build/outputs/bundle/release/app-release.aab"
+        )
     end
 
     ################################################################################################
 
     def update_changelog(next_version: '', changelog_file: '')
-      changes = changelog_from_git_commits(
-        pretty: "- %s",
-        date_format: "short"
-      )
-      changelog = "# v#{next_version}:\n\n#{changes}\n\n-------------------\n"
+        changes = changelog_from_git_commits(pretty: "- %s", date_format: "short")
+        changelog = "# v#{next_version}:\n\n#{changes}\n\n-------------------\n"
 
-      old_content = read_file(file: changelog_file)
-      unless old_content.include?("v#{next_version}")
-        log = changelog + "\n" + old_content
-        write_file(file: changelog_file, content: log)
-        UI.message "updated changelog with:\n#{changelog}"
-      end
+        old_content = read_file(file: changelog_file)
+        unless old_content.include?("v#{next_version}")
+            log = changelog + "\n" + old_content
+            write_file(file: changelog_file, content: log)
+            UI.message "Updated changelog with:\n#{changelog}"
+        end
 
-      # Play still reports the *current* code (e.g., 15).
-      current_store_code = google_play_track_version_codes.max
-      next_code = current_store_code + 1  # we just bumped to this
+        current_store_code = google_play_track_version_codes.max
+        next_code = current_store_code + 1
 
-      write_file(
-        file: "fastlane/metadata/android/en-US/changelogs/#{next_code}.txt",
-        content: changelog
-      )
+        write_file(
+            file: "fastlane/metadata/android/en-US/changelogs/#{next_code}.txt",
+            content: changelog
+        )
     end
 
     def increment_version_code(build_file: 'app/build.gradle.kts', code_increment: 1)
-        version_code = google_play_track_version_codes[0]
+        version_code = google_play_track_version_codes.max
         new_version_code = version_code + code_increment
-        backup_flag = RUBY_PLATFORM.include?("darwin") ? "-i ''" : "-i"
-        sh %Q{cd .. && sed #{backup_flag} "s/versionCode = .*/versionCode = #{new_version_code}/" "#{build_file}"}
+
+        path = abs(build_file)
+        content = File.read(path)
+        content = content.gsub(/versionCode\s*=\s*\d+/, "versionCode = #{new_version_code}")
+        File.write(path, content)
+
         UI.message "increment_version_code: #{version_code} => #{new_version_code}"
         return new_version_code
     end
 
     def increment_version_name(build_file: 'app/build.gradle.kts', increment_major: false, increment_minor: false, increment_hotfix: true)
         version_code, version_name = google_play_track_release_names[0].split(" ")
-        if version_name == nil
-            version_name = version_code
-        end
+        version_name = version_name || version_code
         version_name = version_name.gsub("(", "").gsub(")", "")
         major, minor, hotfix = version_name.split(".").map(&:to_i)
-        if increment_major == true
-            major += 1
-        end
-        if increment_minor == true
-            minor += 1
-        end
-        if increment_hotfix == true
-            hotfix += 1
-        end
-        UI.message "update version name: #{version_name} => #{major}.#{minor}.#{hotfix}"
-        backup_flag = RUBY_PLATFORM.include?("darwin") ? "-i ''" : "-i"
-        sh %Q{cd .. && sed #{backup_flag} "s/versionName = .*/versionName = \\\"#{major}.#{minor}.#{hotfix}\\\"/" "#{build_file}"}
-        return "#{major}.#{minor}.#{hotfix}"
+        major += 1 if increment_major
+        minor += 1 if increment_minor
+        hotfix += 1 if increment_hotfix
+
+        new_version = "#{major}.#{minor}.#{hotfix}"
+        UI.message "increment_version_name: #{version_name} => #{new_version}"
+
+        path = abs(build_file)
+        content = File.read(path)
+        content = content.gsub(/versionName\s*=\s*"[^"]*"/, "versionName = \"#{new_version}\"")
+        File.write(path, content)
+
+        return new_version
     end
 
     def prepare_release(build_file: 'app/build.gradle.kts', type: "hotfix")
         major = type == "major"
         minor = type == "minor"
         hotfix = type == "hotfix"
-
-        code_increment = 1
-        if type == 'none'
-            code_increment = 0
-        end
+        code_increment = type == 'none' ? 0 : 1
 
         increment_version_code(build_file: build_file, code_increment: code_increment)
         return increment_version_name(
@@ -162,42 +146,28 @@ platform :android do
     end
 
     def read_line_from_file(file: "")
-        UI.message "read_line_from_file #{file}"
         return read_file(file: file).gsub(/\n/, "").strip
     end
 
+    def abs(path)
+        File.expand_path(path, REPO_ROOT)
+    end
+
     def read_file(file: "")
-        UI.message "read_file #{file}"
-        return File.read(file)
+        File.read(abs(file))
     end
 
     def write_file(content: "", file: "")
-        UI.message "write_file #{file}"
-        File.open(file, "w") { |f|
-            f.write(content)
-        }
+        require "fileutils"
+        target = abs(file)
+        FileUtils.mkdir_p(File.dirname(target))
+        File.open(target, "w") { |f| f.write(content) }
     end
 
     def read_version(build_file: 'app/build.gradle.kts')
-        preparedVersionName = sh %Q{cd .. && grep -i "versionName =" #{build_file}}
-        preparedVersionName = preparedVersionName.strip.gsub("versionName =","")
-        preparedVersionName = preparedVersionName.strip.gsub("\"", "")
-    end
-
-    def abs(path)
-      File.expand_path(path, REPO_ROOT)
-    end
-
-    def read_file(file: "")
-      UI.message "read_file #{abs(file)}"
-      File.read(abs(file))
-    end
-
-    def write_file(content: "", file: "")
-      require "fileutils"
-      target = abs(file)
-      FileUtils.mkdir_p(File.dirname(target))   # ensure folders exist
-      UI.message "write_file #{target}"
-      File.open(target, "w") { |f| f.write(content) }
+        path = abs(build_file)
+        content = File.read(path)
+        match = content.match(/versionName\s*=\s*"([^"]*)"/)
+        match ? match[1] : nil
     end
 end

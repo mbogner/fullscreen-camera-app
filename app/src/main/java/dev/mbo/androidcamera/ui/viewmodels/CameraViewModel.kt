@@ -2,9 +2,10 @@ package dev.mbo.androidcamera.ui.viewmodels
 
 import android.content.Context
 import android.util.Log
-import android.util.Size
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.Preview
+import androidx.camera.core.resolutionselector.ResolutionSelector
+import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
@@ -29,14 +30,25 @@ class CameraViewModel : ViewModel() {
                     CameraSelector.DEFAULT_BACK_CAMERA
                 }
 
-                val cameraSize = CameraSizeUtil.getMaxSize(context)!!
+                val cameraSize = CameraSizeUtil.getMaxSize(context, lensFacing)
 
-                val preview = Preview.Builder()
-                    .setTargetResolution(cameraSize)
-                    .build()
-                    .also {
-                        it.setSurfaceProvider(previewView.surfaceProvider)
-                    }
+                val previewBuilder = Preview.Builder()
+
+                if (cameraSize != null) {
+                    val resolutionSelector = ResolutionSelector.Builder()
+                        .setResolutionStrategy(
+                            ResolutionStrategy(
+                                cameraSize,
+                                ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER
+                            )
+                        )
+                        .build()
+                    previewBuilder.setResolutionSelector(resolutionSelector)
+                }
+
+                val preview = previewBuilder.build().also {
+                    it.setSurfaceProvider(previewView.surfaceProvider)
+                }
 
                 try {
                     cameraProvider.unbindAll()
@@ -54,7 +66,6 @@ class CameraViewModel : ViewModel() {
     }
 
     companion object {
-        private const val TAG = "HomeViewModel"
+        private const val TAG = "CameraViewModel"
     }
-
 }

@@ -13,3 +13,4 @@ release/
 *.jks
 *.jks.*
 fastlane/keyfile.json
+settings.gradle.kts

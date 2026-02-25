@@ -9,24 +9,30 @@ import androidx.camera.core.CameraSelector
 
 object CameraSizeUtil {
 
-    private var size: Size? = null
+    private val sizeCache = mutableMapOf<Int, Size?>()
 
-    fun getMaxSize(context: Context): Size? {
-        if (null != size) {
-            return size
+    fun getMaxSize(context: Context, lensFacing: Int = CameraSelector.LENS_FACING_BACK): Size? {
+        sizeCache[lensFacing]?.let { return it }
+
+        val cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
+
+        val camera2LensFacing = when (lensFacing) {
+            CameraSelector.LENS_FACING_FRONT -> CameraCharacteristics.LENS_FACING_FRONT
+            else -> CameraCharacteristics.LENS_FACING_BACK
         }
-        val cameraManager =
-            context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
+
         val cameraId = cameraManager.cameraIdList.firstOrNull {
             cameraManager.getCameraCharacteristics(it)
-                .get(CameraCharacteristics.LENS_FACING) == CameraSelector.LENS_FACING_BACK
-        }
-        val characteristics = cameraManager.getCameraCharacteristics(cameraId!!)
+                .get(CameraCharacteristics.LENS_FACING) == camera2LensFacing
+        } ?: return null
+
+        val characteristics = cameraManager.getCameraCharacteristics(cameraId)
         val streamConfigurationMap =
             characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
-        size = streamConfigurationMap?.getOutputSizes(ImageFormat.JPEG)
+        val size = streamConfigurationMap?.getOutputSizes(ImageFormat.JPEG)
             ?.maxByOrNull { it.width * it.height }
+
+        sizeCache[lensFacing] = size
         return size
     }
-
 }

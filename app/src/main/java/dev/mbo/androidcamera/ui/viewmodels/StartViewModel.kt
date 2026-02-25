@@ -5,12 +5,8 @@ import androidx.camera.core.CameraSelector
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
-import androidx.navigation.NavController
-import dev.mbo.androidcamera.ui.NavigationTargets
 
-class StartViewModel(
-    private val navController: NavController
-) : ViewModel() {
+class StartViewModel : ViewModel() {
 
     var selectedLensFacing by mutableIntStateOf(CameraSelector.LENS_FACING_BACK)
         private set
@@ -22,9 +18,4 @@ class StartViewModel(
             CameraSelector.LENS_FACING_BACK
         }
     }
-
-    fun startCameraButtonClicked() {
-        navController.navigate(NavigationTargets.cameraRoute(selectedLensFacing))
-    }
-
 }
