@@ -1,6 +1,7 @@
 package dev.mbo.androidcamera.ui
 
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -20,7 +21,9 @@ fun NavigationHost() {
             StartScreen(
                 viewModel = viewModel,
                 onStartCamera = {
-                    navController.navigate(Camera(viewModel.selectedLensFacing))
+                    if (navController.currentBackStackEntry?.lifecycle?.currentState == Lifecycle.State.RESUMED) {
+                        navController.navigate(Camera(viewModel.selectedLensFacing))
+                    }
                 }
             )
         }
