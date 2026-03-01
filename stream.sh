@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
-scrcpy -s fa4ccbd2 \
-  --video-bit-rate=40M --max-fps=60 --video-codec=h264 \
-  --video-encoder='OMX.qcom.video.encoder.avc'
+# pixel 7a - h265 hardware encoding
+scrcpy -s 34051JEHN13506 \
+ --video-codec=h265 \
+ --video-encoder=c2.exynos.hevc.encoder \
+ --video-bit-rate=20M \
+ --max-fps=60 \
+ --no-audio \
+ --video-buffer=50
