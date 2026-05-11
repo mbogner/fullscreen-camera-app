@@ -1,3 +1,11 @@
+# v1.4.0:
+
+- some code cleanup
+- fix some ANR problem
+- change order in fastlane readme
+
+-------------------
+
 # v1.3.3:
 
 - update internals
