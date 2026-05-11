@@ -41,7 +41,6 @@ fastlane android deploy                  # build signed AAB + upload to Play Sto
 - `ui/NavigationTargets.kt` — route constants
 - `ui/screens/StartScreen.kt`, `CameraScreen.kt` — the two screens
 - `ui/viewmodels/StartViewModel.kt`, `CameraViewModel.kt` — state management
-- `utils/PermissionUtil.kt` — runtime permission handling
 - `utils/CameraSizeUtil.kt` — max resolution detection
 
 ## Fastlane
@@ -56,8 +55,8 @@ Version management: `versionCode` is fetched from Play Store API and incremented
 ## Build Configuration
 
 - **SDK:** compileSdk 36, minSdk 30, targetSdk 36
-- **Java/Kotlin:** version 19
-- **Compose BOM:** 2025.10.01
-- **CameraX:** 1.5.1
-- **Release build:** ProGuard minification enabled
+- **Java:** 17 (Kotlin 2.3)
+- **Compose BOM:** 2026.05.00
+- **CameraX:** 1.6.1
+- **Release build:** R8 minification + resource shrinking enabled
 - **Signing:** uses `android_key.jks` with credentials in separate `.alias`, `.key_password`, `.store_password` files (not committed)
