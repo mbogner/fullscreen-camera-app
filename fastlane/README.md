@@ -11,6 +11,14 @@
 
 All fastlane commands **must** be run from the `fastlane/` directory using `bundle exec`.
 
+## Updating Fastlane
+
+Fastlane version is pinned in `Gemfile`. To update:
+
+```sh
+bundle update fastlane
+```
+
 ## Release Workflow
 
 ### 1. Run Tests
@@ -61,12 +69,4 @@ Builds the signed release AAB and uploads it (with metadata and screenshots) to 
 
 ```sh
 bundle exec fastlane android deploy
-```
-
-## Updating Fastlane
-
-Fastlane version is pinned in `Gemfile`. To update:
-
-```sh
-bundle update fastlane
 ```
