@@ -1,10 +1,11 @@
 package dev.mbo.androidcamera.ui.screens
 
+import androidx.camera.core.CameraSelector
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
@@ -19,7 +20,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.LinkAnnotation
@@ -29,7 +29,6 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import androidx.camera.core.CameraSelector
 import dev.mbo.androidcamera.R
 import dev.mbo.androidcamera.ui.viewmodels.StartViewModel
 
@@ -39,23 +38,23 @@ fun StartScreen(viewModel: StartViewModel, onStartCamera: () -> Unit) {
 
     Column(
         modifier = Modifier
-            .fillMaxWidth()
+            .fillMaxSize()
             .safeDrawingPadding(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Image(
             painter = painterResource(id = R.drawable.icon),
-            contentDescription = "logo",
+            contentDescription = stringResource(R.string.start_logo_description),
             modifier = Modifier
                 .size(300.dp)
-                .padding(0.dp, 30.dp, 0.dp, 0.dp),
+                .padding(top = 30.dp),
             alignment = Alignment.TopCenter
         )
 
         Column(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(0.dp, 30.dp, 0.dp, 0.dp),
+            modifier = Modifier.padding(top = 30.dp),
         ) {
             Text(
                 text = stringResource(R.string.app_name),
@@ -91,12 +90,12 @@ fun StartScreen(viewModel: StartViewModel, onStartCamera: () -> Unit) {
             }
         }
 
-        Column(
-            verticalArrangement = Arrangement.Bottom,
-            modifier = Modifier.padding(0.dp, 0.dp, 0.dp, 32.dp),
-        ) {
-            Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.weight(1f))
 
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(bottom = 32.dp),
+        ) {
             Text(
                 text = stringResource(R.string.start_useful_links),
                 style = MaterialTheme.typography.bodyMedium
@@ -104,15 +103,21 @@ fun StartScreen(viewModel: StartViewModel, onStartCamera: () -> Unit) {
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            val linkStyle = SpanStyle(
+                color = MaterialTheme.colorScheme.primary,
+                textDecoration = TextDecoration.Underline
+            )
+            val privacyUrl = stringResource(R.string.start_privacy_policy_url)
+            val coffeeUrl = stringResource(R.string.start_coffee_url)
             val annotatedText = buildAnnotatedString {
-                withLink(LinkAnnotation.Url("https://mbo.dev/policies/android-fullscreen-camera.html")) {
-                    withStyle(SpanStyle(color = Color.Blue, textDecoration = TextDecoration.Underline)) {
+                withLink(LinkAnnotation.Url(privacyUrl)) {
+                    withStyle(linkStyle) {
                         append(stringResource(R.string.start_privacy_policy))
                     }
                 }
                 append("\n\n")
-                withLink(LinkAnnotation.Url("https://paypal.me/mbogner85")) {
-                    withStyle(SpanStyle(color = Color.Blue, textDecoration = TextDecoration.Underline)) {
+                withLink(LinkAnnotation.Url(coffeeUrl)) {
+                    withStyle(linkStyle) {
                         append(stringResource(R.string.start_coffee))
                     }
                 }

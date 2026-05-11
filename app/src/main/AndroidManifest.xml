@@ -19,6 +19,7 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|uiMode|density"
             android:theme="@style/Theme.AndroidCamera">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

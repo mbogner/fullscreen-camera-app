@@ -2,14 +2,18 @@ package dev.mbo.androidcamera.utils
 
 import android.content.Context
 import android.graphics.ImageFormat
+import android.hardware.camera2.CameraAccessException
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraManager
+import android.util.Log
 import android.util.Size
 import androidx.camera.core.CameraSelector
+import java.util.concurrent.ConcurrentHashMap
 
 object CameraSizeUtil {
 
-    private val sizeCache = mutableMapOf<Int, Size?>()
+    private const val TAG = "CameraSizeUtil"
+    private val sizeCache = ConcurrentHashMap<Int, Size>()
 
     fun getMaxSize(context: Context, lensFacing: Int = CameraSelector.LENS_FACING_BACK): Size? {
         sizeCache[lensFacing]?.let { return it }
@@ -21,18 +25,39 @@ object CameraSizeUtil {
             else -> CameraCharacteristics.LENS_FACING_BACK
         }
 
-        val cameraId = cameraManager.cameraIdList.firstOrNull {
-            cameraManager.getCameraCharacteristics(it)
-                .get(CameraCharacteristics.LENS_FACING) == camera2LensFacing
+        val cameraIds = try {
+            cameraManager.cameraIdList
+        } catch (e: CameraAccessException) {
+            Log.w(TAG, "cameraIdList failed", e)
+            return null
+        }
+
+        val cameraId = cameraIds.firstOrNull { id ->
+            try {
+                cameraManager.getCameraCharacteristics(id)
+                    .get(CameraCharacteristics.LENS_FACING) == camera2LensFacing
+            } catch (e: CameraAccessException) {
+                Log.w(TAG, "getCameraCharacteristics failed for $id", e)
+                false
+            } catch (e: IllegalArgumentException) {
+                Log.w(TAG, "getCameraCharacteristics rejected $id", e)
+                false
+            }
         } ?: return null
 
-        val characteristics = cameraManager.getCameraCharacteristics(cameraId)
-        val streamConfigurationMap =
+        val size = try {
+            val characteristics = cameraManager.getCameraCharacteristics(cameraId)
             characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
-        val size = streamConfigurationMap?.getOutputSizes(ImageFormat.JPEG)
-            ?.maxByOrNull { it.width * it.height }
+                ?.getOutputSizes(ImageFormat.JPEG)
+                ?.maxByOrNull { it.width * it.height }
+        } catch (e: CameraAccessException) {
+            Log.w(TAG, "characteristics fetch failed for $cameraId", e)
+            null
+        }
 
-        sizeCache[lensFacing] = size
+        if (size != null) {
+            sizeCache[lensFacing] = size
+        }
         return size
     }
 }

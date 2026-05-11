@@ -10,4 +10,8 @@
 
     <string name="permission_required">Camera permission is required to use this app.</string>
     <string name="permission_grant">Grant Permission</string>
+
+    <string name="start_logo_description">Application logo</string>
+    <string name="start_privacy_policy_url" translatable="false">https://mbo.dev/policies/android-fullscreen-camera.html</string>
+    <string name="start_coffee_url" translatable="false">https://paypal.me/mbogner85</string>
 </resources>

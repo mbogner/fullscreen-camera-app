@@ -8,32 +8,45 @@ import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import dev.mbo.androidcamera.utils.CameraSizeUtil
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 class CameraViewModel : ViewModel() {
 
+    private val cameraExecutor: ExecutorService = Executors.newSingleThreadExecutor()
+
+    @Volatile
+    private var cameraProvider: ProcessCameraProvider? = null
+
     fun initializeCamera(
         previewView: PreviewView,
-        context: Context,
+        lifecycleOwner: LifecycleOwner,
         lensFacing: Int
     ) {
-        val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
+        val appContext: Context = previewView.context.applicationContext
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(appContext)
         cameraProviderFuture.addListener(
             {
-                val cameraProvider = cameraProviderFuture.get()
+                val provider = try {
+                    cameraProviderFuture.get()
+                } catch (e: Exception) {
+                    Log.e(TAG, "ProcessCameraProvider.getInstance failed", e)
+                    return@addListener
+                }
+                cameraProvider = provider
+
                 val cameraSelector = if (lensFacing == CameraSelector.LENS_FACING_FRONT) {
                     CameraSelector.DEFAULT_FRONT_CAMERA
                 } else {
                     CameraSelector.DEFAULT_BACK_CAMERA
                 }
 
-                val cameraSize = CameraSizeUtil.getMaxSize(context, lensFacing)
+                val cameraSize = CameraSizeUtil.getMaxSize(appContext, lensFacing)
 
                 val previewBuilder = Preview.Builder()
-
                 if (cameraSize != null) {
                     val resolutionSelector = ResolutionSelector.Builder()
                         .setResolutionStrategy(
@@ -46,23 +59,33 @@ class CameraViewModel : ViewModel() {
                     previewBuilder.setResolutionSelector(resolutionSelector)
                 }
 
-                val preview = previewBuilder.build().also {
-                    it.setSurfaceProvider(previewView.surfaceProvider)
-                }
+                val preview = previewBuilder.build()
 
-                try {
-                    cameraProvider.unbindAll()
-                    cameraProvider.bindToLifecycle(
-                        context as LifecycleOwner,
-                        cameraSelector,
-                        preview
-                    )
-                } catch (exc: Exception) {
-                    Log.e(TAG, "binding failed", exc)
+                previewView.post {
+                    preview.setSurfaceProvider(previewView.surfaceProvider)
+                    try {
+                        provider.unbindAll()
+                        provider.bindToLifecycle(lifecycleOwner, cameraSelector, preview)
+                    } catch (e: IllegalArgumentException) {
+                        Log.e(TAG, "binding failed: invalid selector/use case", e)
+                    } catch (e: IllegalStateException) {
+                        Log.e(TAG, "binding failed: lifecycle state", e)
+                    }
                 }
             },
-            ContextCompat.getMainExecutor(context)
+            cameraExecutor
         )
+    }
+
+    fun release() {
+        cameraProvider?.unbindAll()
+        cameraProvider = null
+    }
+
+    override fun onCleared() {
+        release()
+        cameraExecutor.shutdown()
+        super.onCleared()
     }
 
     companion object {
