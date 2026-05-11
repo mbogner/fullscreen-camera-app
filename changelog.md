@@ -1,4 +1,14 @@
-# v1.4.1:
+# v1.3.3:
+
+- update internals
+- libs
+- upgrade gradle and agp
+- update versions
+- fix stream script for my pixel 7a
+
+-------------------
+
+# v1.3.2:
 
 - fix double tap start camera problem
 - add unit tests for the project
