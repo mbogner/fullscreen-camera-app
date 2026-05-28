@@ -1,3 +1,10 @@
+# v1.5.0:
+
+- allow multiple back cameras
+- upgrade gradle wrapper
+
+-------------------
+
 # v1.4.0:
 
 - some code cleanup
