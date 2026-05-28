@@ -1,5 +1,6 @@
 package dev.mbo.androidcamera.ui
 
+import androidx.camera.core.CameraSelector
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -22,14 +23,27 @@ fun NavigationHost() {
                 viewModel = viewModel,
                 onStartCamera = {
                     if (navController.currentBackStackEntry?.lifecycle?.currentState == Lifecycle.State.RESUMED) {
-                        navController.navigate(Camera(viewModel.selectedLensFacing))
+                        val isBack = viewModel.selectedLensFacing == CameraSelector.LENS_FACING_BACK
+                        val selected = viewModel.selectedBackCamera.takeIf { isBack }
+                        navController.navigate(
+                            Camera(
+                                lensFacing = viewModel.selectedLensFacing,
+                                logicalCameraId = selected?.logicalCameraId,
+                                physicalCameraId = selected?.physicalCameraId
+                            )
+                        )
                     }
                 }
             )
         }
         composable<Camera> { backStackEntry ->
             val camera: Camera = backStackEntry.toRoute()
-            CameraScreen(viewModel = viewModel(), lensFacing = camera.lensFacing)
+            CameraScreen(
+                viewModel = viewModel(),
+                lensFacing = camera.lensFacing,
+                logicalCameraId = camera.logicalCameraId,
+                physicalCameraId = camera.physicalCameraId
+            )
         }
     }
 }

@@ -16,7 +16,13 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import dev.mbo.androidcamera.ui.viewmodels.CameraViewModel
 
 @Composable
-fun CameraScreen(viewModel: CameraViewModel, lensFacing: Int, modifier: Modifier = Modifier) {
+fun CameraScreen(
+    viewModel: CameraViewModel,
+    lensFacing: Int,
+    logicalCameraId: String? = null,
+    physicalCameraId: String? = null,
+    modifier: Modifier = Modifier
+) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val rootView = LocalView.current
@@ -30,8 +36,14 @@ fun CameraScreen(viewModel: CameraViewModel, lensFacing: Int, modifier: Modifier
         }
     }
 
-    LaunchedEffect(lensFacing) {
-        viewModel.initializeCamera(previewView, lifecycleOwner, lensFacing)
+    LaunchedEffect(lensFacing, logicalCameraId, physicalCameraId) {
+        viewModel.initializeCamera(
+            previewView = previewView,
+            lifecycleOwner = lifecycleOwner,
+            lensFacing = lensFacing,
+            logicalCameraId = logicalCameraId,
+            physicalCameraId = physicalCameraId
+        )
     }
 
     DisposableEffect(Unit) {

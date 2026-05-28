@@ -1,6 +1,9 @@
 package dev.mbo.androidcamera.ui.viewmodels
 
+import android.annotation.SuppressLint
 import android.util.Log
+import androidx.camera.camera2.interop.Camera2CameraInfo
+import androidx.camera.camera2.interop.Camera2Interop
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.Preview
 import androidx.camera.core.resolutionselector.ResolutionSelector
@@ -21,10 +24,13 @@ class CameraViewModel : ViewModel() {
     private var cameraProvider: ProcessCameraProvider? = null
     private var initJob: Job? = null
 
+    @SuppressLint("UnsafeOptInUsageError")
     fun initializeCamera(
         previewView: PreviewView,
         lifecycleOwner: LifecycleOwner,
-        lensFacing: Int
+        lensFacing: Int,
+        logicalCameraId: String? = null,
+        physicalCameraId: String? = null
     ) {
         initJob?.cancel()
         val appContext = previewView.context.applicationContext
@@ -40,31 +46,35 @@ class CameraViewModel : ViewModel() {
             }
 
             val cameraSize = withContext(Dispatchers.IO) {
-                CameraSizeUtil.getMaxSize(appContext, lensFacing)
+                CameraSizeUtil.getMaxSize(appContext, lensFacing, logicalCameraId, physicalCameraId)
             }
 
-            val selector = if (lensFacing == CameraSelector.LENS_FACING_FRONT) {
-                CameraSelector.DEFAULT_FRONT_CAMERA
-            } else {
-                CameraSelector.DEFAULT_BACK_CAMERA
-            }
+            val selector = buildCameraSelector(lensFacing, logicalCameraId)
 
-            val preview = Preview.Builder()
-                .apply {
-                    cameraSize?.let { size ->
-                        setResolutionSelector(
-                            ResolutionSelector.Builder()
-                                .setResolutionStrategy(
-                                    ResolutionStrategy(
-                                        size,
-                                        ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER
-                                    )
+            val previewBuilder = Preview.Builder().apply {
+                cameraSize?.let { size ->
+                    setResolutionSelector(
+                        ResolutionSelector.Builder()
+                            .setResolutionStrategy(
+                                ResolutionStrategy(
+                                    size,
+                                    ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER
                                 )
-                                .build()
-                        )
-                    }
+                            )
+                            .build()
+                    )
                 }
-                .build()
+            }
+
+            if (physicalCameraId != null) {
+                try {
+                    Camera2Interop.Extender(previewBuilder).setPhysicalCameraId(physicalCameraId)
+                } catch (e: Throwable) {
+                    Log.w(TAG, "setPhysicalCameraId failed for $physicalCameraId", e)
+                }
+            }
+
+            val preview = previewBuilder.build()
                 .also { it.setSurfaceProvider(previewView.surfaceProvider) }
 
             cameraProvider = provider
@@ -77,6 +87,23 @@ class CameraViewModel : ViewModel() {
                 Log.e(TAG, "binding failed: lifecycle state", e)
             }
         }
+    }
+
+    @SuppressLint("UnsafeOptInUsageError")
+    private fun buildCameraSelector(lensFacing: Int, logicalCameraId: String?): CameraSelector {
+        if (lensFacing == CameraSelector.LENS_FACING_FRONT) {
+            return CameraSelector.DEFAULT_FRONT_CAMERA
+        }
+        if (logicalCameraId == null) {
+            return CameraSelector.DEFAULT_BACK_CAMERA
+        }
+        return CameraSelector.Builder()
+            .requireLensFacing(CameraSelector.LENS_FACING_BACK)
+            .addCameraFilter { infos ->
+                val match = infos.filter { Camera2CameraInfo.from(it).cameraId == logicalCameraId }
+                if (match.isNotEmpty()) match.toMutableList() else infos
+            }
+            .build()
     }
 
     fun release() {
