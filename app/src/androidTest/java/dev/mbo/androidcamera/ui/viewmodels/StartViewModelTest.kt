@@ -1,6 +1,7 @@
 package dev.mbo.androidcamera.ui.viewmodels
 
 import androidx.camera.core.CameraSelector
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -14,7 +15,7 @@ class StartViewModelTest {
 
     @Before
     fun setUp() {
-        viewModel = StartViewModel()
+        viewModel = StartViewModel(ApplicationProvider.getApplicationContext())
     }
 
     @Test

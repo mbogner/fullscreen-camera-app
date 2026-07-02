@@ -7,6 +7,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.camera.core.CameraSelector
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import dev.mbo.androidcamera.ui.viewmodels.StartViewModel
 import org.junit.Assert.assertEquals
@@ -23,8 +24,9 @@ class StartScreenTest {
 
     @Test
     fun allElementsDisplayed() {
+        val viewModel = StartViewModel(ApplicationProvider.getApplicationContext())
         composeTestRule.setContent {
-            StartScreen(viewModel = StartViewModel(), onStartCamera = {})
+            StartScreen(viewModel = viewModel, onStartCamera = {})
         }
 
         composeTestRule.onNodeWithText("Fullscreen USB StreamCam").assertIsDisplayed()
@@ -38,8 +40,9 @@ class StartScreenTest {
 
     @Test
     fun backIsSelectedByDefault() {
+        val viewModel = StartViewModel(ApplicationProvider.getApplicationContext())
         composeTestRule.setContent {
-            StartScreen(viewModel = StartViewModel(), onStartCamera = {})
+            StartScreen(viewModel = viewModel, onStartCamera = {})
         }
 
         composeTestRule.onNodeWithText("Back").assertIsSelected()
@@ -48,7 +51,7 @@ class StartScreenTest {
 
     @Test
     fun clickFrontSelectsFrontCamera() {
-        val viewModel = StartViewModel()
+        val viewModel = StartViewModel(ApplicationProvider.getApplicationContext())
         composeTestRule.setContent {
             StartScreen(viewModel = viewModel, onStartCamera = {})
         }
@@ -62,7 +65,7 @@ class StartScreenTest {
 
     @Test
     fun clickBackAfterFrontSwitchesBack() {
-        val viewModel = StartViewModel()
+        val viewModel = StartViewModel(ApplicationProvider.getApplicationContext())
         composeTestRule.setContent {
             StartScreen(viewModel = viewModel, onStartCamera = {})
         }
@@ -77,8 +80,9 @@ class StartScreenTest {
     @Test
     fun startButtonInvokesCallback() {
         var callbackInvoked = false
+        val viewModel = StartViewModel(ApplicationProvider.getApplicationContext())
         composeTestRule.setContent {
-            StartScreen(viewModel = StartViewModel(), onStartCamera = { callbackInvoked = true })
+            StartScreen(viewModel = viewModel, onStartCamera = { callbackInvoked = true })
         }
 
         composeTestRule.onNodeWithText("Start Camera").performClick()

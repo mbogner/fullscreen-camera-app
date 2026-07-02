@@ -5,10 +5,12 @@ import android.util.Log
 import androidx.camera.camera2.interop.Camera2CameraInfo
 import androidx.camera.camera2.interop.Camera2Interop
 import androidx.camera.core.CameraSelector
+import androidx.camera.core.InitializationException
 import androidx.camera.core.Preview
 import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.lifecycle.awaitInstance
 import androidx.camera.view.PreviewView
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
@@ -37,11 +39,9 @@ class CameraViewModel : ViewModel() {
 
         initJob = viewModelScope.launch {
             val provider = try {
-                withContext(Dispatchers.IO) {
-                    ProcessCameraProvider.getInstance(appContext).get()
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "ProcessCameraProvider.getInstance failed", e)
+                ProcessCameraProvider.awaitInstance(appContext)
+            } catch (e: InitializationException) {
+                Log.e(TAG, "ProcessCameraProvider init failed", e)
                 return@launch
             }
 
@@ -100,8 +100,7 @@ class CameraViewModel : ViewModel() {
         return CameraSelector.Builder()
             .requireLensFacing(CameraSelector.LENS_FACING_BACK)
             .addCameraFilter { infos ->
-                val match = infos.filter { Camera2CameraInfo.from(it).cameraId == logicalCameraId }
-                if (match.isNotEmpty()) match.toMutableList() else infos
+                filterByLogicalId(infos, logicalCameraId) { Camera2CameraInfo.from(it).cameraId }
             }
             .build()
     }
@@ -115,10 +114,24 @@ class CameraViewModel : ViewModel() {
 
     override fun onCleared() {
         release()
-        super.onCleared()
     }
 
     companion object {
         private const val TAG = "CameraViewModel"
     }
+}
+
+/**
+ * Returns cameras whose id equals [logicalCameraId]; falls back to all [infos] when none match.
+ *
+ * Always returns a fresh MUTABLE list — CameraX's `CameraSelector.filter()` calls `retainAll()`
+ * on the returned list, which throws `UnsupportedOperationException` on an unmodifiable list.
+ */
+internal fun <T> filterByLogicalId(
+    infos: List<T>,
+    logicalCameraId: String,
+    idOf: (T) -> String,
+): List<T> {
+    val match = infos.filter { idOf(it) == logicalCameraId }
+    return if (match.isNotEmpty()) match.toMutableList() else infos.toMutableList()
 }

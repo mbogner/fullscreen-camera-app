@@ -6,12 +6,12 @@ plugins {
 
 android {
     namespace = "dev.mbo.androidcamera"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "dev.mbo.androidcamera"
         minSdk = 30
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 24
         versionName = "1.5.0"
 
@@ -51,6 +51,7 @@ android {
 
 dependencies {
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.appcompat)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
@@ -74,4 +75,10 @@ dependencies {
     androidTestImplementation(libs.uiautomator)
     debugImplementation(libs.compose.ui.tooling)
     debugImplementation(libs.compose.ui.test.manifest)
+
+    constraints {
+        implementation(libs.androidx.fragment) {
+            because("Play Console flags the transitive androidx.fragment:fragment 1.1.0 as an outdated SDK")
+        }
+    }
 }

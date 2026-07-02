@@ -1,8 +1,10 @@
 package dev.mbo.androidcamera
 
 import android.Manifest
+import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.os.StrictMode
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -38,6 +40,13 @@ import dev.mbo.androidcamera.ui.NavigationHost
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        if ((applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0) {
+            // Debug-only: log (never crash) any main-thread disk/network/slow-call so we catch
+            // regressions like blocking camera enumeration before they reach production as ANRs.
+            StrictMode.setThreadPolicy(
+                StrictMode.ThreadPolicy.Builder().detectAll().penaltyLog().build()
+            )
+        }
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
