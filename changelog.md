@@ -1,3 +1,10 @@
+# v1.5.1:
+
+- hardening and tests
+- work on the crashes and warnings in android vitals
+
+-------------------
+
 # v1.5.0:
 
 - allow multiple back cameras

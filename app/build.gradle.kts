@@ -12,8 +12,8 @@ android {
         applicationId = "dev.mbo.androidcamera"
         minSdk = 30
         targetSdk = 37
-        versionCode = 24
-        versionName = "1.5.0"
+        versionCode = 25
+        versionName = "1.5.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

@@ -1,0 +1,6 @@
+# v1.5.1:
+
+- hardening and tests
+- work on the crashes and warnings in android vitals
+
+-------------------
