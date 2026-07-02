@@ -22,7 +22,7 @@ class CameraSizeUtilTest {
         val field = CameraSizeUtil::class.java.getDeclaredField("sizeCache")
         field.isAccessible = true
         @Suppress("UNCHECKED_CAST")
-        val cache = field.get(CameraSizeUtil) as MutableMap<Int, Size?>
+        val cache = field.get(CameraSizeUtil) as MutableMap<String, Size>
         cache.clear()
     }
 

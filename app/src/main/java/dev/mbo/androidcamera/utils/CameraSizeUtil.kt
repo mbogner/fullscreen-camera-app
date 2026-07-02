@@ -15,6 +15,10 @@ import kotlin.math.sqrt
 object CameraSizeUtil {
 
     private const val TAG = "CameraSizeUtil"
+
+    /** Diagonal of a 35mm full-frame sensor (36mm × 24mm) in mm, used as the crop-factor reference. */
+    private const val DIAGONAL_35MM = 43.27f
+
     private val sizeCache = ConcurrentHashMap<String, Size>()
 
     data class BackCameraInfo(
@@ -153,10 +157,21 @@ object CameraSizeUtil {
         val focalLengths = characteristics.get(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS)
         val focalLength = focalLengths?.firstOrNull() ?: return null
         val sensorSize = characteristics.get(CameraCharacteristics.SENSOR_INFO_PHYSICAL_SIZE) ?: return null
-        val sensorDiagonal = sqrt(sensorSize.width * sensorSize.width + sensorSize.height * sensorSize.height)
+        return equivalentFocalLength35mm(focalLength, sensorSize.width, sensorSize.height)
+    }
+
+    /**
+     * 35mm-equivalent focal length from a physical focal length and sensor dimensions (all in mm).
+     * Returns null when the sensor diagonal is non-positive (unknown/invalid characteristics).
+     */
+    internal fun equivalentFocalLength35mm(
+        focalLengthMm: Float,
+        sensorWidthMm: Float,
+        sensorHeightMm: Float,
+    ): Int? {
+        val sensorDiagonal = sqrt(sensorWidthMm * sensorWidthMm + sensorHeightMm * sensorHeightMm)
         if (sensorDiagonal <= 0f) return null
-        val diagonal35mm = 43.27f
-        val cropFactor = diagonal35mm / sensorDiagonal
-        return (focalLength * cropFactor).roundToInt()
+        val cropFactor = DIAGONAL_35MM / sensorDiagonal
+        return (focalLengthMm * cropFactor).roundToInt()
     }
 }

@@ -1,6 +1,8 @@
 package dev.mbo.androidcamera.ui.viewmodels
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotSame
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.util.Collections
 
@@ -29,5 +31,20 @@ class CameraFilterTest {
         val result = filterByLogicalId(cameras, logicalCameraId = "1") { it }
         (result as MutableList<String>).retainAll(cameras) // must NOT throw
         assertEquals(listOf("1"), result)
+    }
+
+    @Test
+    fun `always returns a fresh list, never the input instance`() {
+        val cameras = listOf("0", "1", "2")
+        // Both branches must copy — returning the input (unmodifiable at runtime) is the bug.
+        assertNotSame(cameras, filterByLogicalId(cameras, logicalCameraId = "1") { it })
+        assertNotSame(cameras, filterByLogicalId(cameras, logicalCameraId = "99") { it })
+    }
+
+    @Test
+    fun `empty input yields an empty mutable list`() {
+        val result = filterByLogicalId(emptyList<String>(), logicalCameraId = "1") { it }
+        (result as MutableList<String>).retainAll(emptyList()) // must NOT throw
+        assertTrue(result.isEmpty())
     }
 }
