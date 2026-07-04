@@ -1,3 +1,10 @@
+# v1.6.0:
+
+- add pinch zoom functionality
+- update fastlane and fix release versioning bug in Fastfile
+
+-------------------
+
 # v1.5.1:
 
 - hardening and tests
