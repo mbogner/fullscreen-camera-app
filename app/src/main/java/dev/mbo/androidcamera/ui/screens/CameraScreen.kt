@@ -54,7 +54,9 @@ fun CameraScreen(
     }
 
     AndroidView(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier
+            .fillMaxSize()
+            .pinchToZoom { viewModel.onPinchZoom(it) },
         factory = { previewView }
     )
 }

@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.util.Log
 import androidx.camera.camera2.interop.Camera2CameraInfo
 import androidx.camera.camera2.interop.Camera2Interop
+import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.InitializationException
 import androidx.camera.core.Preview
@@ -24,6 +25,7 @@ import kotlinx.coroutines.withContext
 class CameraViewModel : ViewModel() {
 
     private var cameraProvider: ProcessCameraProvider? = null
+    private var camera: Camera? = null
     private var initJob: Job? = null
 
     @SuppressLint("UnsafeOptInUsageError")
@@ -80,7 +82,7 @@ class CameraViewModel : ViewModel() {
             cameraProvider = provider
             try {
                 provider.unbindAll()
-                provider.bindToLifecycle(lifecycleOwner, selector, preview)
+                camera = provider.bindToLifecycle(lifecycleOwner, selector, preview)
             } catch (e: IllegalArgumentException) {
                 Log.e(TAG, "binding failed: invalid selector/use case", e)
             } catch (e: IllegalStateException) {
@@ -105,11 +107,28 @@ class CameraViewModel : ViewModel() {
             .build()
     }
 
+    /**
+     * Applies a pinch gesture's relative scale [scaleFactor] to the current camera zoom, clamped to
+     * the sensor's supported range. No-op until a camera is bound or if zoom state is unavailable.
+     *
+     * `detectTransformGestures` also reports single-finger pans with [scaleFactor] == 1f; those are
+     * ignored so a plain drag doesn't spam redundant `setZoomRatio` calls.
+     */
+    fun onPinchZoom(scaleFactor: Float) {
+        if (scaleFactor == 1f) return
+        val cam = camera ?: return
+        val zoom = cam.cameraInfo.zoomState.value ?: return
+        cam.cameraControl.setZoomRatio(
+            computeZoomRatio(zoom.zoomRatio, scaleFactor, zoom.minZoomRatio, zoom.maxZoomRatio)
+        )
+    }
+
     fun release() {
         initJob?.cancel()
         initJob = null
         cameraProvider?.unbindAll()
         cameraProvider = null
+        camera = null
     }
 
     override fun onCleared() {
@@ -135,3 +154,11 @@ internal fun <T> filterByLogicalId(
     val match = infos.filter { idOf(it) == logicalCameraId }
     return if (match.isNotEmpty()) match.toMutableList() else infos.toMutableList()
 }
+
+/**
+ * New zoom ratio for a pinch gesture: the [current] ratio scaled by [scaleFactor], clamped to the
+ * sensor's supported [[min], [max]] range. Kept as a pure, framework-free function so the zoom math
+ * is unit-testable without a bound camera (see CameraZoomTest).
+ */
+internal fun computeZoomRatio(current: Float, scaleFactor: Float, min: Float, max: Float): Float =
+    (current * scaleFactor).coerceIn(min, max)
