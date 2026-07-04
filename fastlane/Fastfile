@@ -124,9 +124,17 @@ platform :android do
         version_name = version_name || version_code
         version_name = version_name.gsub("(", "").gsub(")", "")
         major, minor, hotfix = version_name.split(".").map(&:to_i)
-        major += 1 if increment_major
-        minor += 1 if increment_minor
-        hotfix += 1 if increment_hotfix
+        # Semver: bumping a component resets the lower ones (1.5.1 -minor-> 1.6.0, not 1.6.1).
+        if increment_major
+            major += 1
+            minor = 0
+            hotfix = 0
+        elsif increment_minor
+            minor += 1
+            hotfix = 0
+        elsif increment_hotfix
+            hotfix += 1
+        end
 
         new_version = "#{major}.#{minor}.#{hotfix}"
         UI.message "increment_version_name: #{version_name} => #{new_version}"
