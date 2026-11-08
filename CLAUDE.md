@@ -31,14 +31,16 @@ fastlane android deploy                  # build signed AAB + upload to Play Sto
 
 ## Architecture
 
-**Pattern:** MVVM with Jetpack Compose + Compose Navigation
+**Pattern:** MVVM with Jetpack Compose + Navigation 3
 
-**Navigation flow:** `StartScreen` (camera lens picker) → `CameraScreen/{lensFacing}` (fullscreen preview)
+**Navigation flow:** `Start` (camera lens picker) → `Camera(lensFacing, …)` (fullscreen `CameraXViewfinder` preview); keys are `@Serializable` `NavKey`s
+
+**Orientation:** `NavigationHost` locks the menu to portrait; the camera screen follows the device rotation. `CameraScreen` pushes display rotation into `Preview.targetRotation`, which `CameraXViewfinder` needs because the activity handles orientation changes itself.
 
 **Key source paths** (under `app/src/main/java/dev/mbo/androidcamera/`):
 - `MainActivity.kt` — entry point, handles camera permission requests
-- `ui/NavigationHost.kt` — Compose navigation graph setup
-- `ui/NavigationTargets.kt` — route constants
+- `ui/NavigationHost.kt` — Navigation 3 `NavDisplay` setup
+- `ui/NavigationTargets.kt` — `NavKey` route types
 - `ui/screens/StartScreen.kt`, `CameraScreen.kt` — the two screens
 - `ui/viewmodels/StartViewModel.kt`, `CameraViewModel.kt` — state management
 - `utils/CameraSizeUtil.kt` — max resolution detection
@@ -54,9 +56,10 @@ Version management: `versionCode` is fetched from Play Store API and incremented
 
 ## Build Configuration
 
-- **SDK:** compileSdk 36, minSdk 30, targetSdk 36
-- **Java:** 17 (Kotlin 2.3)
-- **Compose BOM:** 2026.05.00
-- **CameraX:** 1.6.1
+- **SDK:** compileSdk 37, minSdk 30, targetSdk 37
+- **Java:** 17 (Kotlin 2.4)
+- **Compose BOM:** 2026.09.00
+- **CameraX:** 1.6.2 (`camera-compose` viewfinder)
+- **Navigation 3:** 1.2.1
 - **Release build:** R8 minification + resource shrinking enabled
 - **Signing:** uses `android_key.jks` with credentials in separate `.alias`, `.key_password`, `.store_password` files (not committed)

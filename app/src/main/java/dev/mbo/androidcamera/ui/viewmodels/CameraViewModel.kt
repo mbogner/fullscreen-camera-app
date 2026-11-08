@@ -1,24 +1,29 @@
 package dev.mbo.androidcamera.ui.viewmodels
 
-import android.annotation.SuppressLint
+import android.content.Context
 import android.util.Log
+import androidx.annotation.OptIn
 import androidx.camera.camera2.interop.Camera2CameraInfo
 import androidx.camera.camera2.interop.Camera2Interop
+import androidx.camera.camera2.interop.ExperimentalCamera2Interop
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.InitializationException
 import androidx.camera.core.Preview
+import androidx.camera.core.SurfaceRequest
 import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.lifecycle.awaitInstance
-import androidx.camera.view.PreviewView
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.mbo.androidcamera.utils.CameraSizeUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -26,18 +31,25 @@ class CameraViewModel : ViewModel() {
 
     private var cameraProvider: ProcessCameraProvider? = null
     private var camera: Camera? = null
+    private var preview: Preview? = null
+    private var targetRotation: Int? = null
     private var initJob: Job? = null
 
-    @SuppressLint("UnsafeOptInUsageError")
+    private val _surfaceRequest = MutableStateFlow<SurfaceRequest?>(null)
+
+    /** Latest preview surface request, rendered by `CameraXViewfinder` in the UI. */
+    val surfaceRequest: StateFlow<SurfaceRequest?> = _surfaceRequest.asStateFlow()
+
+    @OptIn(ExperimentalCamera2Interop::class)
     fun initializeCamera(
-        previewView: PreviewView,
+        context: Context,
         lifecycleOwner: LifecycleOwner,
         lensFacing: Int,
         logicalCameraId: String? = null,
         physicalCameraId: String? = null
     ) {
         initJob?.cancel()
-        val appContext = previewView.context.applicationContext
+        val appContext = context.applicationContext
 
         initJob = viewModelScope.launch {
             val provider = try {
@@ -54,6 +66,7 @@ class CameraViewModel : ViewModel() {
             val selector = buildCameraSelector(lensFacing, logicalCameraId)
 
             val previewBuilder = Preview.Builder().apply {
+                targetRotation?.let { setTargetRotation(it) }
                 cameraSize?.let { size ->
                     setResolutionSelector(
                         ResolutionSelector.Builder()
@@ -77,8 +90,9 @@ class CameraViewModel : ViewModel() {
             }
 
             val preview = previewBuilder.build()
-                .also { it.setSurfaceProvider(previewView.surfaceProvider) }
+                .also { it.setSurfaceProvider { request -> _surfaceRequest.value = request } }
 
+            this@CameraViewModel.preview = preview
             cameraProvider = provider
             try {
                 provider.unbindAll()
@@ -91,7 +105,7 @@ class CameraViewModel : ViewModel() {
         }
     }
 
-    @SuppressLint("UnsafeOptInUsageError")
+    @OptIn(ExperimentalCamera2Interop::class)
     private fun buildCameraSelector(lensFacing: Int, logicalCameraId: String?): CameraSelector {
         if (lensFacing == CameraSelector.LENS_FACING_FRONT) {
             return CameraSelector.DEFAULT_FRONT_CAMERA
@@ -123,12 +137,24 @@ class CameraViewModel : ViewModel() {
         )
     }
 
+    /**
+     * Keeps the preview's output transform in sync with the display. The activity handles
+     * orientation changes itself (no recreation) and, unlike PreviewView, CameraXViewfinder relies
+     * solely on [Preview.setTargetRotation], so this must be called whenever the display rotates.
+     */
+    fun onDisplayRotationChanged(rotation: Int) {
+        targetRotation = rotation
+        preview?.targetRotation = rotation
+    }
+
     fun release() {
         initJob?.cancel()
         initJob = null
         cameraProvider?.unbindAll()
         cameraProvider = null
         camera = null
+        preview = null
+        _surfaceRequest.value = null
     }
 
     override fun onCleared() {

@@ -3,7 +3,7 @@ package dev.mbo.androidcamera.ui.screens
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.assertIsNotSelected
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.camera.core.CameraSelector
@@ -34,8 +34,12 @@ class StartScreenTest {
         composeTestRule.onNodeWithText("Front").assertIsDisplayed()
         composeTestRule.onNodeWithText("Start Camera").assertIsDisplayed()
         composeTestRule.onNodeWithText("Useful Links").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Privacy Policy").assertIsDisplayed()
-        composeTestRule.onNodeWithText("buy me a coffee").assertIsDisplayed()
+        // Both links live in one Text; the merged per-link nodes carry no layout of their own and
+        // never report as displayed, so assert on the (unmerged) text node that renders them.
+        composeTestRule.onNodeWithText("Privacy Policy", substring = true, useUnmergedTree = true)
+            .assertIsDisplayed()
+        composeTestRule.onNodeWithText("buy me a coffee", substring = true, useUnmergedTree = true)
+            .assertIsDisplayed()
     }
 
     @Test

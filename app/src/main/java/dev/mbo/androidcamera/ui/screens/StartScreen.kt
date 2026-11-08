@@ -3,15 +3,19 @@ package dev.mbo.androidcamera.ui.screens
 import androidx.camera.core.CameraSelector
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenuItem
@@ -46,15 +50,33 @@ import dev.mbo.androidcamera.ui.viewmodels.StartViewModel
 
 @Composable
 fun StartScreen(viewModel: StartViewModel, onStartCamera: () -> Unit) {
+    // Portrait is requested in NavigationHost, but Android 16+ ignores orientation locks on large
+    // screens and in multi-window, so the menu scrolls whenever it doesn't fit the height.
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxSize()
+            .safeDrawingPadding()
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .heightIn(min = maxHeight),
+            verticalArrangement = Arrangement.SpaceBetween,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            CameraOptions(viewModel = viewModel, onStartCamera = onStartCamera)
+            UsefulLinks()
+        }
+    }
+}
+
+@Composable
+private fun CameraOptions(viewModel: StartViewModel, onStartCamera: () -> Unit) {
     val useFrontCamera = viewModel.selectedLensFacing == CameraSelector.LENS_FACING_FRONT
     val showBackCameraPicker = !useFrontCamera && viewModel.availableBackCameras.size > 1
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .safeDrawingPadding(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Image(
             painter = painterResource(id = R.drawable.icon),
             contentDescription = stringResource(R.string.start_logo_description),
@@ -111,42 +133,43 @@ fun StartScreen(viewModel: StartViewModel, onStartCamera: () -> Unit) {
                 Text(text = stringResource(R.string.start_camera_button))
             }
         }
+    }
+}
 
-        Spacer(modifier = Modifier.weight(1f))
+@Composable
+private fun UsefulLinks() {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.padding(top = 32.dp, bottom = 32.dp),
+    ) {
+        Text(
+            text = stringResource(R.string.start_useful_links),
+            style = MaterialTheme.typography.bodyMedium
+        )
 
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(bottom = 32.dp),
-        ) {
-            Text(
-                text = stringResource(R.string.start_useful_links),
-                style = MaterialTheme.typography.bodyMedium
-            )
+        Spacer(modifier = Modifier.height(12.dp))
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            val linkStyle = SpanStyle(
-                color = MaterialTheme.colorScheme.primary,
-                textDecoration = TextDecoration.Underline
-            )
-            val privacyUrl = stringResource(R.string.start_privacy_policy_url)
-            val coffeeUrl = stringResource(R.string.start_coffee_url)
-            val annotatedText = buildAnnotatedString {
-                withLink(LinkAnnotation.Url(privacyUrl)) {
-                    withStyle(linkStyle) {
-                        append(stringResource(R.string.start_privacy_policy))
-                    }
-                }
-                append("\n\n")
-                withLink(LinkAnnotation.Url(coffeeUrl)) {
-                    withStyle(linkStyle) {
-                        append(stringResource(R.string.start_coffee))
-                    }
+        val linkStyle = SpanStyle(
+            color = MaterialTheme.colorScheme.primary,
+            textDecoration = TextDecoration.Underline
+        )
+        val privacyUrl = stringResource(R.string.start_privacy_policy_url)
+        val coffeeUrl = stringResource(R.string.start_coffee_url)
+        val annotatedText = buildAnnotatedString {
+            withLink(LinkAnnotation.Url(privacyUrl)) {
+                withStyle(linkStyle) {
+                    append(stringResource(R.string.start_privacy_policy))
                 }
             }
-
-            Text(text = annotatedText)
+            append("\n\n")
+            withLink(LinkAnnotation.Url(coffeeUrl)) {
+                withStyle(linkStyle) {
+                    append(stringResource(R.string.start_coffee))
+                }
+            }
         }
+
+        Text(text = annotatedText)
     }
 }
 
