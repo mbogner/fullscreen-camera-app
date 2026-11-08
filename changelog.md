@@ -1,3 +1,11 @@
+# v1.7.0:
+
+- update and rotation
+- update agp
+- update bundler
+
+-------------------
+
 # v1.6.0:
 
 - add pinch zoom functionality
