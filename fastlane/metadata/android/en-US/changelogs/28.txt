@@ -1,0 +1,6 @@
+# v1.8.0:
+
+- keep screen on in camera mode
+- upgrade
+
+-------------------

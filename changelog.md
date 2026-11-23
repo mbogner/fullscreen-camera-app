@@ -1,3 +1,10 @@
+# v1.8.0:
+
+- keep screen on in camera mode
+- upgrade
+
+-------------------
+
 # v1.7.0:
 
 - update and rotation
