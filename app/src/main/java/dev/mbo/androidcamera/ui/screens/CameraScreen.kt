@@ -14,6 +14,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.keepScreenOn
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
@@ -82,6 +83,7 @@ fun CameraScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
+            .keepScreenOn()
             // Matches PreviewView's black backdrop until the first SurfaceRequest arrives.
             .background(Color.Black)
             .pinchToZoom { viewModel.onPinchZoom(it) }
